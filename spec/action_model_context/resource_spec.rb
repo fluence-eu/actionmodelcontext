@@ -47,6 +47,12 @@ RSpec.describe ActionModelContext::Resource do
     expect(resource.new(context:).read_mcp({}).mime_type).to eq("text/markdown")
   end
 
+  it "inherits mime_type but not uri" do
+    parent = Class.new(described_class) { uri "app://parent"; mime_type "text/markdown" }
+    child = Class.new(parent)
+    expect([ child.mime_type, child.uri, Class.new(described_class).mime_type ]).to eq([ "text/markdown", nil, nil ])
+  end
+
   it "is concrete only with its own uri and a read" do
     with_uri = Class.new(described_class) { uri "app://x" }
     with_read = Class.new(described_class) { def read = "x" }

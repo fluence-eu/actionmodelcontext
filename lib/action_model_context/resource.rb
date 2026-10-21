@@ -1,3 +1,5 @@
+require "active_support/core_ext/class/attribute"
+
 module ActionModelContext
   class Resource
     include Primitive
@@ -5,6 +7,8 @@ module ActionModelContext
     primitive kind: :resources, suffix: "Resource"
 
     URI_VARIABLE = /\{([A-Za-z_]\w*)\}/
+
+    class_attribute :declared_mime_type, instance_accessor: false, instance_predicate: false
 
     class << self
       def uri(value = nil)
@@ -14,9 +18,9 @@ module ActionModelContext
       end
 
       def mime_type(value = nil)
-        return @declared_mime_type = value if value
+        return self.declared_mime_type = value if value
 
-        @declared_mime_type
+        declared_mime_type
       end
 
       def resource_name(name = nil) = primitive_name(name)

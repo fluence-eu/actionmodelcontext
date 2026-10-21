@@ -68,7 +68,7 @@ class UserResource < ApplicationResource
 end
 ```
 
-A URI containing `{variable}` is registered as a resource template, and the variables are passed to `read` as keyword arguments. `read` may return a `String` (`text/plain`), or a `Hash` / `Array` (`application/json`); `mime_type "..."` overrides this. An `ActionModelContext::Error` becomes an `invalid_params` JSON-RPC error.
+A URI containing `{variable}` is registered as a resource template, and the variables are passed to `read` as keyword arguments. `read` may return a `String` (`text/plain`), or a `Hash` / `Array` (`application/json`); `mime_type "..."` overrides this and is inherited by subclasses, unlike `uri`. An `ActionModelContext::Error` becomes an `invalid_params` JSON-RPC error.
 
 ## Prompts
 
