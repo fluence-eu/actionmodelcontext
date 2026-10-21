@@ -9,6 +9,13 @@ RSpec.describe "MCP endpoint", type: :request do
   end
 
   def request_body(method, params) = { jsonrpc: "2.0", id: 1, method:, params: }
+  def handshake = { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "spec", version: "1.0" } }
+
+  def mock_post(app, method, params, headers = {})
+    env = { input: request_body(method, params).to_json, "CONTENT_TYPE" => "application/json", "HTTP_ACCEPT" => "application/json, text/event-stream" }
+    Rack::MockRequest.new(app).post("/mcp", env.merge(headers))
+  end
+
   def tool_names = rpc("tools/list")[:result][:tools].pluck(:name)
   def call_tool(name, headers: {}, **arguments) = rpc("tools/call", { name:, arguments: }, headers)[:result]
   def description_of(name, headers) = rpc("tools/list", {}, headers)[:result][:tools].find { _1[:name] == name }[:description]
@@ -32,14 +39,9 @@ RSpec.describe "MCP endpoint", type: :request do
   end
 
   context "with the legacy lifecycle" do
-    let(:initialize_result) do
-      handshake = { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "spec", version: "1.0" } }
-      post_json(request_body("initialize", handshake).to_json)[:result]
-    end
+    let(:initialize_result) { post_json(request_body("initialize", handshake).to_json)[:result] }
 
-    def rpc(method, params = {}, headers = {})
-      post_json(request_body(method, params).to_json, headers.merge("MCP-Protocol-Version" => initialize_result[:protocolVersion]))
-    end
+    def rpc(method, params = {}, headers = {}) = post_json(request_body(method, params).to_json, headers.merge("MCP-Protocol-Version" => initialize_result[:protocolVersion]))
 
     it_behaves_like "an MCP endpoint"
 
@@ -63,11 +65,7 @@ RSpec.describe "MCP endpoint", type: :request do
         controller = stub_const("VerifiedMcpController", Class.new(McpController) do
           private def mcp_transport_options = { token_verifier: Class.new { def verify(_token) = raise("JWKS unreachable") }.new }
         end)
-        raw = Rack::MockRequest.new(controller.action(:create)).post(
-          "/mcp", input: request_body("tools/list", {}).to_json,
-          "CONTENT_TYPE" => "application/json", "HTTP_ACCEPT" => "application/json", "HTTP_AUTHORIZATION" => "Bearer t",
-        )
-        expect(raw.status).to eq(500)
+        expect(mock_post(controller.action(:create), "tools/list", {}, "HTTP_AUTHORIZATION" => "Bearer t").status).to eq(500)
         expect(subscriber.reports).to contain_exactly([ have_attributes(message: "JWKS unreachable"), anything ])
       end
 
@@ -105,6 +103,35 @@ RSpec.describe "MCP endpoint", type: :request do
       post "/mcp", params: request_body("tools/list", {}).to_json, headers: json_headers
       expect(response).to have_http_status(:ok)
     end
+
+    it "keeps checking CSRF on the other actions of the controller" do
+      stub_const("ExtraMcpController", Class.new(ApplicationController) do
+        include ActionModelContext::Server
+        def ping = head(:ok)
+      end)
+      with_routing do |routes|
+        routes.draw { post "ping", to: "extra_mcp#ping" }
+        post "/ping"
+        expect(response).to have_http_status(422)
+      end
+    end
+  end
+
+  it "keeps the transport stateless whatever mcp_transport_options returns" do
+    controller = stub_const("StatefulMcpController", Class.new(McpController) do
+      private def mcp_transport_options = { stateless: false, enable_json_response: false, serve_subscriptions_listen: true }
+    end)
+    threads = Thread.list.size
+    initialized = mock_post(controller.action(:create), "initialize", handshake)
+    listed = mock_post(controller.action(:create), "tools/list", {})
+    expect(initialized.headers).not_to have_key("mcp-session-id")
+    expect([ listed.status, listed.content_type ]).to eq([ 200, "application/json" ])
+    expect(Thread.list.size).to eq(threads)
+  end
+
+  it "lets mcp_transport_options turn DNS rebinding protection back on" do
+    controller = stub_const("LoopbackMcpController", Class.new(McpController) { private def mcp_transport_options = { dns_rebinding_protection: true } })
+    expect(mock_post(controller.action(:create), "tools/list", {}, "HTTP_HOST" => "evil.example").status).to eq(403)
   end
 
   it "reads a body Rails already consumed from a non-rewindable input" do
@@ -114,9 +141,11 @@ RSpec.describe "MCP endpoint", type: :request do
     expect(JSON.parse(raw.body, symbolize_names: true).dig(:result, :content, 0, :text)).to eq("hi")
   end
 
-  it "rejects a non-JSON POST with 415" do
-    post "/mcp", params: "x", headers: { "CONTENT_TYPE" => "text/plain" }
+  it "rejects a non-JSON POST with 415 before any tool runs" do
+    allow(EchoTool).to receive(:new).and_call_original
+    post "/mcp", params: request_body("tools/call", { name: "echo", arguments: { message: "hi" } }).to_json, headers: { "CONTENT_TYPE" => "text/plain" }
     expect(response).to have_http_status(415)
+    expect(EchoTool).not_to have_received(:new)
   end
 
   it "answers GET with 405" do

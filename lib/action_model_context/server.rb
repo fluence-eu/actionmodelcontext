@@ -5,7 +5,7 @@ module ActionModelContext
     extend ActiveSupport::Concern
 
     included do
-      skip_forgery_protection if respond_to?(:skip_forgery_protection)
+      skip_forgery_protection only: %i[show create destroy] if respond_to?(:skip_forgery_protection)
     end
 
     def self.discover(base_name, dir)
@@ -42,11 +42,12 @@ module ActionModelContext
         prompts: Server.discover("ApplicationPrompt", "prompts").map { _1.to_mcp(context:) },
         capabilities: { tools: {}, resources: {}, prompts: {} },
       )
-      # Host checking is left to Rails' config.hosts, which runs before any controller: the transport's own
-      # check rejects every Host but 127.0.0.1, ::1 and localhost, so every production host.
+      # Host checking is left to Rails' config.hosts: the transport's own check rejects every Host but 127.0.0.1,
+      # ::1 and localhost. The structural options come last because stateless: false starts one session reaper
+      # thread per request that nothing ever closes.
       MCP::Server::Transports::StreamableHTTPTransport.new(
-        server, stateless: true, enable_json_response: true, serve_subscriptions_listen: false, dns_rebinding_protection: false,
-        **mcp_transport_options,
+        server, dns_rebinding_protection: false, **mcp_transport_options,
+        stateless: true, enable_json_response: true, serve_subscriptions_listen: false,
       )
     end
   end
