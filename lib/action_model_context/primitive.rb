@@ -44,10 +44,13 @@ module ActionModelContext
 
     private
 
+    # rescue_with_handler returns the exception, not the handler's value, so its walk up the causes is redone here.
     def with_rescue
       yield
     rescue StandardError => e
-      rescue_with_handler(e) ? nil : raise
+      handled = e
+      handled = handled.cause until handled.nil? || (handler = handler_for_rescue(handled))
+      handler ? handler.call(handled) : raise
     end
 
     def raise_invalid_params(error)

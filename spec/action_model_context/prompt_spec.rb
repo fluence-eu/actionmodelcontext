@@ -63,7 +63,7 @@ RSpec.describe ActionModelContext::Prompt do
 
   it "rejects other return types" do
     prompt = prompt_class("BadPrompt") { def call = 42 }
-    expect { prompt.new(context:).call_mcp({}) }.to raise_error(TypeError, /String or Array/)
+    expect { prompt.new(context:).call_mcp({}) }.to raise_error(TypeError, /BadPrompt#call or its rescue_from handler must return a String or Array/)
   end
 
   it "is concrete once a subclass defines call" do
@@ -96,6 +96,14 @@ RSpec.describe ActionModelContext::Prompt do
       def call = context.fetch(:missing)
     end
     expect { prompt.new(context:).call_mcp({}) }.to raise_error(MCP::Server::RequestHandlerError, "Nope")
+  end
+
+  it "converts the value of a returning rescue_from handler like call's" do
+    prompt = prompt_class("FallbackPrompt") do
+      rescue_from(KeyError) { "Anonymous" }
+      def call = context.fetch(:missing)
+    end
+    expect(prompt.new(context:).call_mcp({}).messages.first.content.text).to eq("Anonymous")
   end
 
   context "with a Hash context and request _meta" do

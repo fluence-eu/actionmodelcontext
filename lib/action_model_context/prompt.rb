@@ -50,7 +50,7 @@ module ActionModelContext
       messages = case result
       when String then [ message("user", result) ]
       when Array then result.map { |item| message(item.fetch(:role), item.fetch(:content)) }
-      else raise TypeError, "#{self.class.name}#call must return a String or Array, got #{result.class}"
+      else raise TypeError, "#{self.class.name}#call or its rescue_from handler must return a String or Array, got #{result.class}"
       end
       MCP::Prompt::Result.new(messages:)
     end

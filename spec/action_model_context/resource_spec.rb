@@ -59,7 +59,7 @@ RSpec.describe ActionModelContext::Resource do
       uri "app://bad"
       def read = 42
     end)
-    expect { resource.new(context:).read_mcp({}) }.to raise_error(TypeError, /String, Hash or Array/)
+    expect { resource.new(context:).read_mcp({}) }.to raise_error(TypeError, /BadResource#read or its rescue_from handler must return a String, Hash or Array/)
   end
 
   context "with a Hash context and request _meta" do
@@ -102,5 +102,14 @@ RSpec.describe ActionModelContext::Resource do
       def read = context.fetch(:missing)
     end)
     expect { resource.new(context:).read_mcp({}) }.to raise_error(MCP::Server::RequestHandlerError, "Nope")
+  end
+
+  it "converts the value of a returning rescue_from handler like read's" do
+    resource = stub_const("FallbackResource", Class.new(described_class) do
+      uri "app://fallback"
+      rescue_from(KeyError) { "Anonymous" }
+      def read = context.fetch(:missing)
+    end)
+    expect(resource.new(context:).read_mcp({})).to have_attributes(text: "Anonymous", mime_type: "text/plain")
   end
 end

@@ -58,7 +58,7 @@ module ActionModelContext
       text, default_mime = case result
       when String then [ result, "text/plain" ]
       when Hash, Array then [ result.to_json, "application/json" ]
-      else raise TypeError, "#{self.class.name}#read must return a String, Hash or Array, got #{result.class}"
+      else raise TypeError, "#{self.class.name}#read or its rescue_from handler must return a String, Hash or Array, got #{result.class}"
       end
       uri = self.class.uri.gsub(URI_VARIABLE) { params.fetch(Regexp.last_match(1).to_sym) }
       MCP::Resource::TextContents.new(text:, uri:, mime_type: self.class.mime_type || default_mime)

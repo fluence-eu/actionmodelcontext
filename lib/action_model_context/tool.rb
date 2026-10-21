@@ -74,7 +74,7 @@ module ActionModelContext
       when String then MCP::Tool::Response.new([ { type: "text", text: result } ])
       when Hash then MCP::Tool::Response.new([ { type: "text", text: result.to_json } ], structured_content: result)
       when Array then MCP::Tool::Response.new([ { type: "text", text: result.to_json } ])
-      else raise TypeError, "#{self.class.name}#call must return a String, Hash, Array or MCP::Tool::Response, got #{result.class}"
+      else raise TypeError, "#{self.class.name}#call or its rescue_from handler must return a String, Hash, Array or MCP::Tool::Response, got #{result.class}"
       end
     end
   end

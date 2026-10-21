@@ -63,6 +63,32 @@ RSpec.describe ActionModelContext::Tool, "execution" do
     end
   end
 
+  context "when a rescue_from handler returns" do
+    let(:tool_class) do
+      stub_const("FallbackTool", Class.new(described_class) do
+        rescue_from(KeyError) { "Anonymous" }
+        def call = context.fetch(:missing)
+      end)
+    end
+
+    it("converts its value like call's") { expect(result).to include(isError: false, content: [ { type: "text", text: "Anonymous" } ]) }
+  end
+
+  context "when only the cause has a rescue_from handler" do
+    let(:tool_class) do
+      stub_const("WrappingTool", Class.new(described_class) do
+        rescue_from(KeyError) { |error| "Rescued #{error.key}" }
+        def call
+          context.fetch(:missing)
+        rescue KeyError
+          raise "wrapped"
+        end
+      end)
+    end
+
+    it("hands the cause to that handler") { expect(result).to include(content: [ { type: "text", text: "Rescued missing" } ]) }
+  end
+
   context "when call raises ActionModelContext::Error directly" do
     let(:tool_class) do
       stub_const("DeniedTool", Class.new(described_class) { def call = raise(ActionModelContext::Error, "Denied") })
@@ -86,7 +112,7 @@ RSpec.describe ActionModelContext::Tool, "execution" do
 
     it "reports a TypeError" do
       response
-      expect(reported.first).to be_a(TypeError).and have_attributes(message: /BadTool#call must return/)
+      expect(reported.first).to be_a(TypeError).and have_attributes(message: /BadTool#call or its rescue_from handler must return/)
     end
   end
 

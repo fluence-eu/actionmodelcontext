@@ -46,6 +46,8 @@ class WhoAmITool < ApplicationTool
 end
 ```
 
+A handler that returns normally has handled the exception, as in a Rails controller: its return value becomes the result, converted like the value of `call` (or of `read` in a resource). To produce an error result instead, raise `ActionModelContext::Error` from the handler, as above. When no handler matches the exception, its `cause` is tried next, as in Rails.
+
 ## Resources
 
 ```ruby
