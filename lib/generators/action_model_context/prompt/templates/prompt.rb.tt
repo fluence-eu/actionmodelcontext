@@ -1,0 +1,10 @@
+class <%= class_name %>Prompt < ApplicationPrompt
+  description "<%= class_name.underscore.humanize %>"
+<% arguments.each do |argument| -%>
+  argument :<%= argument.name %><%= ", required: true" if argument.required %>
+<% end -%>
+
+  def call<%= "(#{signature})" if signature.present? %>
+    raise NotImplementedError, "<%= class_name %>Prompt#call is not implemented"
+  end
+end

@@ -1,0 +1,8 @@
+class <%= class_name %>Resource < ApplicationResource
+  uri "<%= uri %>"
+  description "<%= class_name.underscore.humanize %>"
+
+  def read<%= "(#{signature})" if signature.present? %>
+    raise NotImplementedError, "<%= class_name %>Resource#read is not implemented"
+  end
+end

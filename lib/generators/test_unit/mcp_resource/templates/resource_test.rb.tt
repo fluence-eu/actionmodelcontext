@@ -1,0 +1,11 @@
+require "test_helper"
+
+class <%= class_name %>ResourceTest < ActiveSupport::TestCase
+  test "reads the resource" do
+    skip "Fill in the parameters and expectations"
+
+    resource = <%= class_name %>Resource.new(context: {})
+
+    assert_predicate resource.read, :present?
+  end
+end

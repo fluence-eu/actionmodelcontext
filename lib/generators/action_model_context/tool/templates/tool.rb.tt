@@ -1,0 +1,10 @@
+class <%= class_name %>Tool < ApplicationTool
+  description "<%= class_name.underscore.humanize %>"
+<% arguments.each do |argument| -%>
+  argument :<%= argument.name %>, :<%= argument.type %><%= ", required: true" if argument.required %>
+<% end -%>
+
+  def call<%= "(#{signature})" if signature.present? %>
+    raise NotImplementedError, "<%= class_name %>Tool#call is not implemented"
+  end
+end

@@ -1,0 +1,14 @@
+require "test_helper"
+require "action_model_context/test_helper"
+
+class <%= class_name %>ToolTest < ActiveSupport::TestCase
+  include ActionModelContext::TestHelper
+
+  test "calls the tool" do
+    skip "Fill in the arguments and expectations"
+
+    result = call_tool(<%= ["#{class_name}Tool", placeholders].reject(&:blank?).join(", ") %>)
+
+    assert_not result.error?
+  end
+end

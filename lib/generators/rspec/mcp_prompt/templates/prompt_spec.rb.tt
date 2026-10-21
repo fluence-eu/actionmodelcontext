@@ -1,0 +1,11 @@
+require "rails_helper"
+
+RSpec.describe <%= class_name %>Prompt do
+  it "builds the prompt" do
+    skip "Fill in the arguments and expectations"
+
+    prompt = described_class.new(context: {})
+
+    expect(prompt.call).to be_present
+  end
+end

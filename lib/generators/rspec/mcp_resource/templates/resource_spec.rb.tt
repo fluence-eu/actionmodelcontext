@@ -1,0 +1,11 @@
+require "rails_helper"
+
+RSpec.describe <%= class_name %>Resource do
+  it "reads the resource" do
+    skip "Fill in the parameters and expectations"
+
+    resource = described_class.new(context: {})
+
+    expect(resource.read).to be_present
+  end
+end
