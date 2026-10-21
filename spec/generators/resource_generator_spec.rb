@@ -40,7 +40,7 @@ RSpec.describe ActionModelContext::Generators::ResourceGenerator do
 
   it "produces valid Ruby" do
     run("User", "--uri", "users://{id}")
-    run("User", framework: "test_unit")
+    run("User", "--uri", "users://{id}", framework: "test_unit")
     files = Dir.glob(File.join(destination, "**/*.rb"))
     expect(files.size).to eq(3)
     files.each { expect(`#{RbConfig.ruby} -c #{_1}`).to include("Syntax OK") }
