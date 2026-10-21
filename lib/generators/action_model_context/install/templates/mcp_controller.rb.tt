@@ -1,0 +1,8 @@
+class McpController < ApplicationController
+  include ActionModelContext::Server
+  # before_action :authenticate_user!
+
+  private
+
+  def mcp_context = {} # ex. { user: current_user }
+end
