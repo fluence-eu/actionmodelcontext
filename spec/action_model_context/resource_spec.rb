@@ -2,6 +2,9 @@ require "rails_helper"
 
 RSpec.describe ActionModelContext::Resource do
   let(:context) { { user: "ada" } }
+
+  after { I18n.backend.reload! }
+
   let(:statics) { [ ReadmeResource ] }
   let(:templates) { [ UserResource ] }
   let(:server) do
@@ -14,7 +17,7 @@ RSpec.describe ActionModelContext::Resource do
   def rpc(method, params = {}) = server.handle({ jsonrpc: "2.0", id: 1, method:, params: })
   def list = rpc("resources/list")[:result]
   def listed_templates = rpc("resources/templates/list")[:result]
-  def read(uri) = rpc("resources/read", { uri: })
+  def read(uri, **extra) = rpc("resources/read", { uri:, **extra })
 
   it("derives the name") { expect(ReadmeResource.resource_name).to eq("readme") }
   it("detects templates") { expect([ ReadmeResource.template?, UserResource.template? ]).to eq([ false, true ]) }
@@ -50,6 +53,34 @@ RSpec.describe ActionModelContext::Resource do
       def read = 42
     end)
     expect { resource.new(context:).read_mcp({}) }.to raise_error(TypeError, /String, Hash or Array/)
+  end
+
+  context "with a Hash context and request _meta" do
+    let(:seen) { [] }
+    let(:statics) do
+      captured = seen
+      [ stub_const("SeenResource", Class.new(described_class) do
+        uri "app://seen"
+        define_method(:read) { captured << context && "ok" }
+      end) ]
+    end
+    let(:templates) do
+      captured = seen
+      [ stub_const("SeenTemplateResource", Class.new(described_class) do
+        uri "seen://{id}"
+        define_method(:read) { |id:| captured << context && id }
+      end) ]
+    end
+
+    it "gives a static resource the exact context object, not the SDK copy" do
+      read("app://seen", _meta: { progressToken: "t" })
+      expect(seen.first).to equal(context)
+    end
+
+    it "gives a template the exact context object, not the SDK copy" do
+      read("seen://1", _meta: { progressToken: "t" })
+      expect(seen.first).to equal(context)
+    end
   end
 
   it "takes title and description from I18n" do
