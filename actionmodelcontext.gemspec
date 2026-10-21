@@ -7,12 +7,12 @@ Gem::Specification.new do |spec|
   spec.email = [ "jphilippe@fluence.eu" ]
 
   spec.summary = "Rails-flavoured MCP server on top of the official mcp SDK"
-  spec.homepage = "https://github.com/jplot/actionmodelcontext"
+  spec.homepage = "https://github.com/fluence-eu/actionmodelcontext"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2"
 
-  spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/jplot/actionmodelcontext"
+  spec.metadata["source_code_uri"] = "https://github.com/fluence-eu/actionmodelcontext"
+  spec.metadata["rubygems_mfa_required"] = "true"
 
   spec.files = Dir["lib/**/*", "LICENSE.txt", "README.md"]
   spec.require_paths = [ "lib" ]
