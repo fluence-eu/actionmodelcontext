@@ -36,7 +36,7 @@ end
 
 `argument(name, type, required: false, description: nil, enum: nil, items: nil, properties: nil)` where `type` is one of `:string`, `:integer`, `:number`, `:boolean`, `:array`, `:object`. The tool name defaults to the underscored class name without the `Tool` suffix (`echo`); override it with `tool_name "other"`. `title`, `description` and `annotations(**hints)` are class-level macros.
 
-`call` may return a `String`, a `Hash` (sent as text and as structured content), an `Array`, or an `MCP::Tool::Response`. Raise `ActionModelContext::Error` to return an error result to the model with your message; any other exception is reported through `Rails.error` (`source: "actionmodelcontext"`). `rescue_from` works inside a primitive:
+`call` may return a `String`, a `Hash` (sent as text and as structured content), an `Array`, or an `MCP::Tool::Response`. Raise `ActionModelContext::Error` to return an error result to the model with your message; any other exception is reported through `Rails.error` (`severity: :error`, `source: "actionmodelcontext"`). `rescue_from` works inside a primitive:
 
 ```ruby
 class WhoAmITool < ApplicationTool

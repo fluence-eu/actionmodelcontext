@@ -58,7 +58,7 @@ RSpec.describe "MCP endpoint", type: :request do
         call_tool("failing")
         call_tool("missing")
         post_json("{")
-        expect(subscriber.reports).to contain_exactly([ an_instance_of(RuntimeError), hash_including(handled: true, source: "actionmodelcontext") ])
+        expect(subscriber.reports).to contain_exactly([ an_instance_of(RuntimeError), hash_including(handled: true, severity: :error, source: "actionmodelcontext") ])
       end
 
       it "reports once a token verifier plugged through mcp_transport_options that crashes" do
