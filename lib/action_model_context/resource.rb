@@ -47,9 +47,7 @@ module ActionModelContext
       params = params.slice(*self.class.uri_variables)
       to_contents(with_rescue { read(**params) }, params)
     rescue Error => e
-      raise MCP::Server::RequestHandlerError.new(
-        e.message, nil, error_type: :invalid_params, error_code: JsonRpcHandler::ErrorCode::INVALID_PARAMS,
-      )
+      raise_invalid_params(e)
     end
 
     private

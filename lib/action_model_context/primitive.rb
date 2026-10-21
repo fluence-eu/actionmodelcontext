@@ -49,5 +49,11 @@ module ActionModelContext
     rescue StandardError => e
       rescue_with_handler(e) ? nil : raise
     end
+
+    def raise_invalid_params(error)
+      raise MCP::Server::RequestHandlerError.new(
+        error.message, nil, error_type: :invalid_params, error_code: JsonRpcHandler::ErrorCode::INVALID_PARAMS,
+      )
+    end
   end
 end

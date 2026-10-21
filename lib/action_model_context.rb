@@ -7,4 +7,5 @@ require "action_model_context/translation"
 require "action_model_context/primitive"
 require "action_model_context/tool"
 require "action_model_context/resource"
+require "action_model_context/prompt"
 require "action_model_context/railtie" if defined?(Rails::Railtie)
