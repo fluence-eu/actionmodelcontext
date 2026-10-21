@@ -1,5 +1,5 @@
 class <%= class_name %>Prompt < ApplicationPrompt
-  description "<%= class_name.underscore.humanize %>"
+  description "<%= class_name.underscore.tr("/", " ").humanize %>"
 <% arguments.each do |argument| -%>
   argument :<%= argument.name %><%= ", required: true" if argument.required %>
 <% end -%>

@@ -10,9 +10,15 @@ module ActionModelContext
 
       def create_prompt_file = template("prompt.rb", File.join("app/mcp/prompts", class_path, "#{file_name}_prompt.rb"))
 
-      hook_for :test_framework, as: :mcp_prompt
+      hook_for :test_framework, as: :mcp_prompt do |generator|
+        invoke generator, [ remove_possible_suffix(name), *specs ]
+      end
 
       private
+
+      def file_name = @_file_name ||= remove_possible_suffix(super)
+
+      def remove_possible_suffix(name) = name.sub(/_?prompt$/i, "")
 
       def arguments = @arguments ||= specs.map { Argument.parse(_1, typed: false) }
 

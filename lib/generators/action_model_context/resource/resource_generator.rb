@@ -10,9 +10,15 @@ module ActionModelContext
 
       def create_resource_file = template("resource.rb", File.join("app/mcp/resources", class_path, "#{file_name}_resource.rb"))
 
-      hook_for :test_framework, as: :mcp_resource
+      hook_for :test_framework, as: :mcp_resource do |generator|
+        invoke generator, [ remove_possible_suffix(name) ]
+      end
 
       private
+
+      def file_name = @_file_name ||= remove_possible_suffix(super)
+
+      def remove_possible_suffix(name) = name.sub(/_?resource$/i, "")
 
       def uri = options[:uri] || "app://#{file_name}"
 

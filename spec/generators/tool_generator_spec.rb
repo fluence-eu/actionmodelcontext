@@ -82,6 +82,17 @@ RSpec.describe ActionModelContext::Generators::ToolGenerator do
     expect { sandbox::PingTool.new(context: {}).call }.to raise_error(ActionModelContext::Error, "PingTool is not implemented yet")
   end
 
+  it "strips a trailing Tool from the name" do
+    run("FindUserTool", "email:string:required")
+    expect(read("app/mcp/tools/find_user_tool.rb")).to include("class FindUserTool < ApplicationTool")
+    expect(read("spec/mcp/tools/find_user_tool_spec.rb")).to include("RSpec.describe FindUserTool", %(call_tool(FindUserTool, email: "example")))
+  end
+
+  it "humanizes a namespaced name into the description" do
+    run("Billing::Refund")
+    expect(read("app/mcp/tools/billing/refund_tool.rb")).to include(%(description "Billing refund"))
+  end
+
   it "nests namespaced tools" do
     run("Admin::FindUser")
     expect(read("app/mcp/tools/admin/find_user_tool.rb")).to include("class Admin::FindUserTool < ApplicationTool")

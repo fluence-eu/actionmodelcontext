@@ -20,6 +20,12 @@ RSpec.describe ActionModelContext::Generators::PromptGenerator do
     )
   end
 
+  it "strips a trailing Prompt and humanizes the namespace" do
+    run("Support::ReplyPrompt")
+    expect(read("app/mcp/prompts/support/reply_prompt.rb")).to include("class Support::ReplyPrompt < ApplicationPrompt", %(description "Support reply"))
+    expect(read("spec/mcp/prompts/support/reply_prompt_spec.rb")).to include("RSpec.describe Support::ReplyPrompt")
+  end
+
   it "generates an RSpec test" do
     run("Summarize", "topic:required")
     expect(read("spec/mcp/prompts/summarize_prompt_spec.rb")).to include("RSpec.describe SummarizePrompt", "skip")

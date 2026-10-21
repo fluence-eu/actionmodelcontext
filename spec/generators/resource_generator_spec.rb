@@ -19,6 +19,14 @@ RSpec.describe ActionModelContext::Generators::ResourceGenerator do
     )
   end
 
+  it "strips a trailing Resource and humanizes the namespace" do
+    run("Billing::InvoiceResource")
+    expect(read("app/mcp/resources/billing/invoice_resource.rb")).to include(
+      "class Billing::InvoiceResource < ApplicationResource", %(uri "app://invoice"), %(description "Billing invoice")
+    )
+    expect(read("spec/mcp/resources/billing/invoice_resource_spec.rb")).to include("RSpec.describe Billing::InvoiceResource")
+  end
+
   it "derives several params in order" do
     run("Comment", "--uri", "posts://{post_id}/comments/{id}")
     expect(read("app/mcp/resources/comment_resource.rb")).to include("def read(post_id:, id:)")

@@ -1,6 +1,6 @@
 class <%= class_name %>Resource < ApplicationResource
   uri "<%= uri %>"
-  description "<%= class_name.underscore.humanize %>"
+  description "<%= class_name.underscore.tr("/", " ").humanize %>"
 
   def read<%= "(#{signature})" if signature.present? %>
     raise ActionModelContext::Error, "<%= class_name %>Resource is not implemented yet"
