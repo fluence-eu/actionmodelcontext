@@ -100,6 +100,11 @@ RSpec.describe ActionModelContext::Tool do
     expect([ child.description, child.title ]).to eq([ nil, nil ])
   end
 
+  it "is concrete once a subclass defines call" do
+    base = Class.new(described_class)
+    expect([ described_class, base, Class.new(base) { def call = "ok" } ].map(&:concrete?)).to eq([ false, false, true ])
+  end
+
   it "inherits annotations" do
     child = Class.new(Class.new(described_class) { annotations read_only_hint: true })
     expect(child.annotations).to eq(read_only_hint: true)

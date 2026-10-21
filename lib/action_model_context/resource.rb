@@ -21,6 +21,8 @@ module ActionModelContext
 
       def resource_name(name = nil) = primitive_name(name)
 
+      def concrete? = !uri.nil? && instance_method(:read).owner != Resource
+
       def template? = uri.include?("{")
 
       def uri_variables = uri.scan(URI_VARIABLE).flatten.map(&:to_sym)

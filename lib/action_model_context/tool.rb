@@ -25,6 +25,8 @@ module ActionModelContext
 
       def argument_names = arguments.keys
 
+      def concrete? = instance_method(:call).owner != Tool
+
       def annotations(**hints)
         return declared_annotations if hints.empty?
 

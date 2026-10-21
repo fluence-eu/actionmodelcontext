@@ -47,6 +47,13 @@ RSpec.describe ActionModelContext::Resource do
     expect(resource.new(context:).read_mcp({}).mime_type).to eq("text/markdown")
   end
 
+  it "is concrete only with its own uri and a read" do
+    with_uri = Class.new(described_class) { uri "app://x" }
+    with_read = Class.new(described_class) { def read = "x" }
+    both = Class.new(with_read) { uri "app://x" }
+    expect([ with_uri, with_read, both, Class.new(both) ].map(&:concrete?)).to eq([ false, false, true, false ])
+  end
+
   it "rejects other return types" do
     resource = stub_const("BadResource", Class.new(described_class) do
       uri "app://bad"

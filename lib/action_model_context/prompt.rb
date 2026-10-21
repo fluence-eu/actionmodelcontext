@@ -17,6 +17,8 @@ module ActionModelContext
 
       def argument_names = arguments.keys
 
+      def concrete? = instance_method(:call).owner != Prompt
+
       def to_mcp(context:)
         prompt = self
         MCP::Prompt.define(name: prompt_name, title:, description:, arguments: mcp_arguments) do |args, **|

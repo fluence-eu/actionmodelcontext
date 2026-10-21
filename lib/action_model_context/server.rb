@@ -11,7 +11,7 @@ module ActionModelContext
     def self.discover(base_name, dir)
       path = Rails.root.join("app/mcp", dir)
       Rails.autoloaders.main.eager_load_dir(path) if path.directory?
-      base_name.safe_constantize&.descendants || []
+      base_name.safe_constantize&.descendants&.select(&:concrete?) || []
     end
 
     def show = serve_mcp

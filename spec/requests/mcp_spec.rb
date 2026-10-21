@@ -74,6 +74,30 @@ RSpec.describe "MCP endpoint", type: :request do
         expect(subscriber.reports).to be_empty
       end
     end
+
+    context "with primitives stubbed under the app base classes" do
+      # A stubbed subclass stays in ApplicationTool.descendants until GC and broke "lists only concrete tools" under
+      # --order random; the reload swaps in a fresh ApplicationTool and DescendantsTracker drops the old subclasses.
+      after { Rails.application.reloader.reload! }
+
+      it "lists the concrete subclass of a tool base, not the base" do
+        stub_const("Admin::BaseTool", Class.new(ApplicationTool) { rescue_from(KeyError) { raise ActionModelContext::Error, "Missing" } })
+        stub_const("Admin::PingTool", Class.new(Admin::BaseTool) { def call = "pong" })
+        expect(tool_names & %w[admin_base admin_ping]).to eq([ "admin_ping" ])
+      end
+
+      it "keeps every list working next to a resource base without uri" do
+        stub_const("JsonResource", Class.new(ApplicationResource) { mime_type "application/json" })
+        expect(tool_names).to include("echo")
+        expect(rpc("resources/list")[:result][:resources].pluck(:uri)).to eq([ "app://readme" ])
+        expect(rpc("resources/templates/list")[:result][:resourceTemplates].pluck(:uriTemplate)).to eq([ "users://{id}" ])
+      end
+
+      it "lists no prompt base" do
+        stub_const("Admin::BasePrompt", Class.new(ApplicationPrompt) { rescue_from(KeyError) { raise ActionModelContext::Error, "Missing" } })
+        expect(rpc("prompts/list")[:result][:prompts].pluck(:name)).to eq([ "summarize" ])
+      end
+    end
   end
 
   context "with the 2026-07-28 lifecycle" do

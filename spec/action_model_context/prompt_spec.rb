@@ -66,6 +66,11 @@ RSpec.describe ActionModelContext::Prompt do
     expect { prompt.new(context:).call_mcp({}) }.to raise_error(TypeError, /String or Array/)
   end
 
+  it "is concrete once a subclass defines call" do
+    base = Class.new(described_class)
+    expect([ described_class, base, Class.new(base) { def call = "ok" } ].map(&:concrete?)).to eq([ false, false, true ])
+  end
+
   it "passes only declared arguments" do
     prompt = prompt_class("PickyPrompt") do
       argument :topic
