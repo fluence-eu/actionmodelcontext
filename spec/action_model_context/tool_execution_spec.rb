@@ -38,7 +38,7 @@ RSpec.describe ActionModelContext::Tool, "execution" do
   end
 
   context "with an Array result" do
-    let(:tool_class) { stub_const("ListTool", Class.new(ApplicationTool) { def call = [ 1, 2 ] }) }
+    let(:tool_class) { stub_const("ListTool", Class.new(described_class) { def call = [ 1, 2 ] }) }
 
     it "returns JSON text only" do
       expect(result).not_to have_key(:structuredContent)
@@ -48,7 +48,7 @@ RSpec.describe ActionModelContext::Tool, "execution" do
 
   context "with a Response result" do
     let(:tool_class) do
-      stub_const("RawTool", Class.new(ApplicationTool) { def call = MCP::Tool::Response.new([ { type: "text", text: "raw" } ]) })
+      stub_const("RawTool", Class.new(described_class) { def call = MCP::Tool::Response.new([ { type: "text", text: "raw" } ]) })
     end
 
     it("passes it through") { expect(result[:content]).to eq([ { type: "text", text: "raw" } ]) }
@@ -65,7 +65,7 @@ RSpec.describe ActionModelContext::Tool, "execution" do
 
   context "when call raises ActionModelContext::Error directly" do
     let(:tool_class) do
-      stub_const("DeniedTool", Class.new(ApplicationTool) { def call = raise(ActionModelContext::Error, "Denied") })
+      stub_const("DeniedTool", Class.new(described_class) { def call = raise(ActionModelContext::Error, "Denied") })
     end
 
     it "returns isError with the message" do
@@ -82,7 +82,7 @@ RSpec.describe ActionModelContext::Tool, "execution" do
   end
 
   context "with an unsupported return type" do
-    let(:tool_class) { stub_const("BadTool", Class.new(ApplicationTool) { def call = Object.new }) }
+    let(:tool_class) { stub_const("BadTool", Class.new(described_class) { def call = Object.new }) }
 
     it "reports a TypeError" do
       response
