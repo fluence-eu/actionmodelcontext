@@ -44,6 +44,23 @@ RSpec.describe ActionModelContext::Prompt do
     end
   end
 
+  context "with a prompt returning a malformed Array" do
+    let(:reported) { [] }
+    let(:prompts) { [ prompt_class("MalformedPrompt") { def call = [ { "role" => "user", "content" => "x" } ] } ] }
+    let(:server) do
+      sink = reported
+      MCP::Server.new(
+        prompts: prompts.map { |p| p.to_mcp(context:) },
+        configuration: MCP::Configuration.new(exception_reporter: ->(e, _) { sink << e }),
+      )
+    end
+
+    it "masks the failure as an internal error and reports a KeyError" do
+      expect(get("malformed")[:error]).to include(code: -32_603)
+      expect(reported.first).to be_a(KeyError)
+    end
+  end
+
   it "rejects other return types" do
     prompt = prompt_class("BadPrompt") { def call = 42 }
     expect { prompt.new(context:).call_mcp({}) }.to raise_error(TypeError, /String or Array/)
