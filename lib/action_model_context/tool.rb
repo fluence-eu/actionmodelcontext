@@ -5,7 +5,9 @@ require "active_support/core_ext/enumerable"
 
 module ActionModelContext
   class Tool
-    include ActiveSupport::Rescuable
+    include Primitive
+
+    primitive kind: :tools, suffix: "Tool"
 
     ARGUMENT_TYPES = %i[string integer number boolean array object].freeze
 
@@ -13,23 +15,7 @@ module ActionModelContext
     class_attribute :arguments, instance_accessor: false, instance_predicate: false, default: {}.freeze
 
     class << self
-      def description(text = nil)
-        return @declared_description = text if text
-
-        @declared_description || Translation.lookup(:tools, tool_name, :description)
-      end
-
-      def title(text = nil)
-        return @declared_title = text if text
-
-        @declared_title || Translation.lookup(:tools, tool_name, :title)
-      end
-
-      def tool_name(name = nil)
-        return @declared_tool_name = name if name
-
-        @declared_tool_name || Naming.default_name(self, suffix: "Tool")
-      end
+      def tool_name(name = nil) = primitive_name(name)
 
       def argument(name, type, required: false, description: nil, enum: nil, items: nil, properties: nil)
         raise ArgumentError, "unknown argument type #{type.inspect}" unless ARGUMENT_TYPES.include?(type)
@@ -61,15 +47,9 @@ module ActionModelContext
       end
 
       def property_schema(name, spec)
-        description = spec[:description] || Translation.lookup(:tools, tool_name, :arguments, name)
+        description = spec[:description] || Translation.lookup(i18n_kind, tool_name, :arguments, name)
         { type: spec[:type].to_s, description:, enum: spec[:enum], items: spec[:items], properties: spec[:properties] }.compact
       end
-    end
-
-    attr_reader :context
-
-    def initialize(context:)
-      @context = context
     end
 
     def call(**) = raise(NotImplementedError, "#{self.class.name}#call is not implemented")
@@ -83,9 +63,7 @@ module ActionModelContext
     private
 
     def invoke(arguments)
-      call(**arguments.slice(*self.class.argument_names))
-    rescue StandardError => e
-      rescue_with_handler(e) ? nil : raise
+      with_rescue { call(**arguments.slice(*self.class.argument_names)) }
     end
 
     def to_response(result)
