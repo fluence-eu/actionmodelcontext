@@ -1,1 +1,212 @@
 # actionmodelcontext
+
+A Rails-flavoured MCP server layer on top of the official [`mcp`](https://github.com/modelcontextprotocol/ruby-sdk) SDK. Tools, resources and prompts are plain Ruby classes under `app/mcp/`, discovered by Zeitwerk, and served by a controller concern over the Streamable HTTP transport (stateless, JSON responses).
+
+Requires Ruby 3.2+, Rails 7.2+ and `mcp` ~> 1.8.
+
+## Installation
+
+```sh
+bundle add actionmodelcontext
+bin/rails generate action_model_context:install
+```
+
+The install generator creates `ApplicationTool`, `ApplicationResource` and `ApplicationPrompt` under `app/mcp/`, an `McpController`, and this route:
+
+```ruby
+resource :mcp, controller: :mcp, only: %i[show create destroy]
+```
+
+Files under `app/mcp/tools`, `app/mcp/resources` and `app/mcp/prompts` are autoloaded with that first directory level collapsed: `app/mcp/tools/billing/refund_tool.rb` defines `Billing::RefundTool`. The controller discovers primitives through `ApplicationTool`, `ApplicationResource` and `ApplicationPrompt` and their `descendants`.
+
+> `ApplicationResource` can collide with Graphiti or JSONAPI::Resources, which also define an `ApplicationResource` (in `app/resources/`). There is only one top-level constant of that name, and the gem's discovery relies on it, so an app using one of these libraries has to resolve the clash before adding MCP resources.
+
+## Tools
+
+```ruby
+class EchoTool < ApplicationTool
+  argument :message, :string, required: true
+  argument :times, :integer
+
+  def call(message:, times: 1) = message * times
+end
+```
+
+`argument(name, type, required: false, description: nil, enum: nil, items: nil, properties: nil)` where `type` is one of `:string`, `:integer`, `:number`, `:boolean`, `:array`, `:object`. The tool name defaults to the underscored class name without the `Tool` suffix (`echo`); override it with `tool_name "other"`. `title`, `description` and `annotations(**hints)` are class-level macros.
+
+`call` may return a `String`, a `Hash` (sent as text and as structured content), an `Array`, or an `MCP::Tool::Response`. Raise `ActionModelContext::Error` to return an error result to the model with your message; any other exception is reported through `Rails.error` (`source: "actionmodelcontext"`). `rescue_from` works inside a primitive:
+
+```ruby
+class WhoAmITool < ApplicationTool
+  rescue_from(KeyError) { raise ActionModelContext::Error, "Unknown user" }
+
+  def call = { user: context.fetch(:user) }
+end
+```
+
+## Resources
+
+```ruby
+class ReadmeResource < ApplicationResource
+  uri "app://readme"
+
+  def read = "Hello"
+end
+
+class UserResource < ApplicationResource
+  uri "users://{id}"
+
+  def read(id:)
+    raise ActionModelContext::Error, "Unknown user" if id == "0"
+
+    { id:, viewer: context[:user] }
+  end
+end
+```
+
+A URI containing `{variable}` is registered as a resource template, and the variables are passed to `read` as keyword arguments. `read` may return a `String` (`text/plain`), or a `Hash` / `Array` (`application/json`); `mime_type "..."` overrides this. An `ActionModelContext::Error` becomes an `invalid_params` JSON-RPC error.
+
+## Prompts
+
+```ruby
+class SummarizePrompt < ApplicationPrompt
+  argument :topic, required: true
+
+  def call(topic:) = "Summarize #{topic} in three points"
+end
+```
+
+`call` returns a `String` (one user message) or an `Array` of `{ role:, content: }` hashes.
+
+## Generators
+
+```sh
+bin/rails generate action_model_context:tool Billing::Refund amount:integer:required reason
+bin/rails generate action_model_context:resource User --uri "users://{id}"
+bin/rails generate action_model_context:prompt Summarize topic:required
+```
+
+Each one also generates a spec (RSpec) or test (Minitest) following your `test_framework`.
+
+## Authentication and context
+
+The controller is a normal Rails controller, so authenticate with a `before_action`, and expose what tools need through `mcp_context`. Whatever it returns is available as `context` in every tool, resource and prompt:
+
+```ruby
+class McpController < ApplicationController
+  include ActionModelContext::Server
+  before_action :authenticate_user!
+
+  private
+
+  def mcp_context = { user: current_user }
+end
+```
+
+The gem imposes no authentication. Three hooks are available, all private and overridable:
+
+| Hook | Default | Purpose |
+| --- | --- | --- |
+| `mcp_context` | `{}` | The `context` given to every primitive |
+| `mcp_server_options` | `{ name: <app module name, underscored> }` | Keyword arguments for `MCP::Server.new` (for example `name:`, `version:`, `instructions:`) |
+| `mcp_transport_options` | `{}` | Keyword arguments for `MCP::Server::Transports::StreamableHTTPTransport.new` |
+
+`stateless`, `enable_json_response` and `serve_subscriptions_listen` are pinned and cannot be overridden through `mcp_transport_options`: the transport is built per request, so a stateful transport would leak a session reaper thread on every call.
+
+### OAuth
+
+Pass a verifier to the SDK transport through `mcp_transport_options`. It is anything that responds to `verify(token)` and returns an `MCP::Server::OAuth::AccessToken`, or `nil` to reject (see `MCP::Server::OAuth::TokenVerifier` in the SDK):
+
+```ruby
+class McpController < ApplicationController
+  include ActionModelContext::Server
+
+  private
+
+  def mcp_transport_options = { token_verifier: MyTokenVerifier.new }
+end
+```
+
+The transport verifies the bearer token on every request, but tools do not receive the SDK's `ServerContext`, so the verified token is not visible to them. An app that needs the token or its claims in `context` has to verify it itself, in a `before_action` or a middleware, and return it from `mcp_context`.
+
+### Host and Origin checks (DNS rebinding)
+
+The concern builds the transport with `dns_rebinding_protection: false`. The transport's own check accepts only `127.0.0.1`, `::1` and `localhost` as Host, which would reject every real deployment. Host checking is left to Rails' `config.hosts` (`ActionDispatch::HostAuthorization`).
+
+- In development, Rails allows local hosts by default. In production, `config.hosts` is empty, which means **no Host check at all** unless your app configures one. Set `config.hosts` in production.
+- The same flag also disables the transport's Origin check.
+- To turn the protection back on, override the option:
+
+```ruby
+def mcp_transport_options = { dns_rebinding_protection: true, allowed_hosts: %w[mcp.example.com] }
+```
+
+## I18n
+
+Titles, descriptions and argument descriptions are looked up per request, in the current locale:
+
+```yaml
+en:
+  action_model_context:
+    tools:
+      billing_refund:
+        title: Refund
+        description: Refund an invoice
+        arguments:
+          amount: Amount in cents
+    resources:
+      user:
+        description: A user
+    prompts:
+      summarize:
+        description: Summarize a topic
+        arguments:
+          topic: What to summarize
+```
+
+The keys are `action_model_context.{tools,resources,prompts}.<name>.{title,description,arguments.<arg>}`, where `<name>` is the primitive name (`billing_refund` for `Billing::RefundTool`). A value declared in the class (`description "..."`, `argument ..., description: "..."`) wins over I18n. Rails I18n fallbacks apply, and a missing key omits the field: "Translation missing" never reaches the client.
+
+Switch the locale per request in your controller:
+
+```ruby
+class McpController < ApplicationController
+  include ActionModelContext::Server
+
+  around_action :switch_locale
+
+  private
+
+  def switch_locale(&) = I18n.with_locale(request.headers["Accept-Language"].presence_in(%w[en fr]) || :en, &)
+end
+```
+
+> Do not mix languages across tools in one server. Descriptions in several languages degrade tool selection by the model (see [modelcontextprotocol issue #1395](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1395)). Serve one consistent locale per client.
+
+## Testing
+
+`ActionModelContext::TestHelper` runs a tool through a real `MCP::Server`, so argument validation and error handling behave as in production:
+
+```ruby
+require "action_model_context/test_helper"
+
+RSpec.describe EchoTool do
+  include ActionModelContext::TestHelper
+
+  it "repeats the message" do
+    result = call_tool(EchoTool, message: "hi", times: 2)
+
+    expect(result.text).to eq("hihi")
+    expect(result).not_to be_error
+  end
+
+  it "passes the context" do
+    expect(call_tool(WhoAmITool, context: { user: "ada" }).structured_content).to eq(user: "ada")
+  end
+end
+```
+
+`call_tool(tool_class, context: {}, **arguments)` returns a result with `text`, `structured_content` and `error?`. An unexpected exception raised by the tool is re-raised in the test.
+
+## License
+
+MIT.
