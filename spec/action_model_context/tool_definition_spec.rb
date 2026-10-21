@@ -78,4 +78,30 @@ RSpec.describe ActionModelContext::Tool do
   it "omits translation lookup for anonymous classes" do
     expect(schema_of(Class.new(described_class))).not_to have_key(:description)
   end
+
+  it "hands the exact context passed to to_mcp to the instance" do
+    context = { user: "u" }
+    received = nil
+    tool = stub_const("FindUserTool", Class.new(described_class))
+    allow(tool).to receive(:new) { |context:| instance_double(tool, call_mcp: :ok).tap { received = context } }
+    tool.to_mcp(context:).call(server_context: { merged: true, _meta: {} })
+    expect(received).to equal(context)
+  end
+
+  it "does not inherit a declared tool_name" do
+    parent = stub_const("ParentTool", Class.new(described_class) { tool_name "x" })
+    child = stub_const("ChildTool", Class.new(parent))
+    expect([ parent.tool_name, child.tool_name ]).to eq(%w[x child])
+  end
+
+  it "does not inherit declared description or title" do
+    parent = Class.new(described_class) { description "Parent"; title "Parent title" }
+    child = Class.new(parent)
+    expect([ child.description, child.title ]).to eq([ nil, nil ])
+  end
+
+  it "inherits annotations" do
+    child = Class.new(Class.new(described_class) { annotations read_only_hint: true })
+    expect(child.annotations).to eq(read_only_hint: true)
+  end
 end
