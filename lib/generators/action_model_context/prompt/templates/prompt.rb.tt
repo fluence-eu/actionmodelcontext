@@ -5,6 +5,6 @@ class <%= class_name %>Prompt < ApplicationPrompt
 <% end -%>
 
   def call<%= "(#{signature})" if signature.present? %>
-    raise NotImplementedError, "<%= class_name %>Prompt#call is not implemented"
+    raise ActionModelContext::Error, "<%= class_name %>Prompt is not implemented yet"
   end
 end

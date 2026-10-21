@@ -74,6 +74,14 @@ RSpec.describe ActionModelContext::Generators::ToolGenerator do
     expect(read("spec/mcp/tools/ping_tool_spec.rb")).to include("call_tool(PingTool)")
   end
 
+  it "generates a call that raises ActionModelContext::Error until implemented" do
+    run("Ping")
+    path = File.join(destination, "app/mcp/tools/ping_tool.rb")
+    sandbox = Module.new { const_set(:ApplicationTool, Class.new(ActionModelContext::Tool)) }
+    sandbox.module_eval(File.read(path), path, 1)
+    expect { sandbox::PingTool.new(context: {}).call }.to raise_error(ActionModelContext::Error, "PingTool is not implemented yet")
+  end
+
   it "nests namespaced tools" do
     run("Admin::FindUser")
     expect(read("app/mcp/tools/admin/find_user_tool.rb")).to include("class Admin::FindUserTool < ApplicationTool")

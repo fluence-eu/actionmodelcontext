@@ -3,6 +3,6 @@ class <%= class_name %>Resource < ApplicationResource
   description "<%= class_name.underscore.humanize %>"
 
   def read<%= "(#{signature})" if signature.present? %>
-    raise NotImplementedError, "<%= class_name %>Resource#read is not implemented"
+    raise ActionModelContext::Error, "<%= class_name %>Resource is not implemented yet"
   end
 end

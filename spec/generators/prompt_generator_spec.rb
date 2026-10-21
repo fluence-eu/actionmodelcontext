@@ -15,7 +15,8 @@ RSpec.describe ActionModelContext::Generators::PromptGenerator do
     run("Summarize", "topic:required", "tone")
     expect(read("app/mcp/prompts/summarize_prompt.rb")).to include(
       "class SummarizePrompt < ApplicationPrompt", %(description "Summarize"),
-      "argument :topic, required: true", "argument :tone\n", "def call(topic:, tone: nil)"
+      "argument :topic, required: true", "argument :tone\n", "def call(topic:, tone: nil)",
+      %(raise ActionModelContext::Error, "SummarizePrompt is not implemented yet")
     )
   end
 

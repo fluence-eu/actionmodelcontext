@@ -97,6 +97,13 @@ RSpec.describe "MCP endpoint", type: :request do
         stub_const("Admin::BasePrompt", Class.new(ApplicationPrompt) { rescue_from(KeyError) { raise ActionModelContext::Error, "Missing" } })
         expect(rpc("prompts/list")[:result][:prompts].pluck(:name)).to eq([ "summarize" ])
       end
+
+      it "answers a JSON-RPC error result for a tool that is not implemented yet" do
+        stub_const("DraftTool", Class.new(ApplicationTool) { def call = raise(ActionModelContext::Error, "DraftTool is not implemented yet") })
+        result = call_tool("draft")
+        expect(response.media_type).to eq("application/json")
+        expect(result).to include(isError: true, content: [ { type: "text", text: "DraftTool is not implemented yet" } ])
+      end
     end
   end
 

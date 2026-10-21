@@ -14,7 +14,8 @@ RSpec.describe ActionModelContext::Generators::ResourceGenerator do
   it "derives read params from the URI template" do
     run("User", "--uri", "users://{id}")
     expect(read("app/mcp/resources/user_resource.rb")).to include(
-      "class UserResource < ApplicationResource", %(uri "users://{id}"), "def read(id:)"
+      "class UserResource < ApplicationResource", %(uri "users://{id}"), "def read(id:)",
+      %(raise ActionModelContext::Error, "UserResource is not implemented yet")
     )
   end
 

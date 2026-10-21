@@ -90,7 +90,7 @@ bin/rails generate action_model_context:resource User --uri "users://{id}"
 bin/rails generate action_model_context:prompt Summarize topic:required
 ```
 
-Each one also generates a spec (RSpec) or test (Minitest) following your `test_framework`.
+Each one also generates a spec (RSpec) or test (Minitest) following your `test_framework`. Until you implement it, the generated `call` or `read` raises `ActionModelContext::Error`, so a fresh stub answers an error result (`isError` for a tool, a JSON-RPC `-32602` error for a resource or prompt) instead of a 500.
 
 ## Authentication and context
 
