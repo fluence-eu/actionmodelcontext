@@ -2,6 +2,7 @@ require "active_support/core_ext/class/attribute"
 require "active_support/rescuable"
 require "active_support/core_ext/string/inflections"
 require "active_support/core_ext/enumerable"
+require "active_support/core_ext/object/blank"
 
 module ActionModelContext
   class Tool

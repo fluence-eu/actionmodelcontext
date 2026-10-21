@@ -1,4 +1,5 @@
 require "rails/generators"
+require "active_support/core_ext/object/blank"
 
 module ActionModelContext
   module Generators
