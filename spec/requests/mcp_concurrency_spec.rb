@@ -11,6 +11,9 @@ RSpec.describe "MCP endpoint under concurrent requests" do
   def refund_description(locale) = rpc("tools/list", {}, "HTTP_ACCEPT_LANGUAGE" => locale)[:tools].find { _1[:name] == "billing_refund" }[:description]
 
   it "never leaks context or locale between concurrent requests" do
+    # Rails 8.0's lazy route set and generate_local_secret race on a cold first request: CI seed 6009 got 404s and an ArgumentError.
+    Rails.application.routes.routes
+    Rails.application.secret_key_base
     descriptions = { "en" => "Refund an invoice", "fr" => "Rembourse une facture" }
     threads = Array.new(16) do |i|
       Thread.new do
