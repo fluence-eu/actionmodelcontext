@@ -121,7 +121,11 @@ The gem imposes no authentication. Three hooks are available, all private and ov
 
 The MCP server is an OAuth 2.1 resource server: it checks bearer tokens issued by an authorization server (Doorkeeper in the same app, or an external identity provider) and never issues them. The SDK implements this role.
 
-Clients discover the authorization server through an RFC 9728 Protected Resource Metadata document. It is served at the origin root (`/.well-known/oauth-protected-resource/mcp` for a server at `/mcp`) and without authentication, which is what the SDK's middleware does. `resource` must be the exact URL clients connect to: the SDK's verifiers check the token audience against it. Build the verifier once, at boot: `JWTVerifier` (which needs the `jwt` gem) caches the signing keys per instance. `IntrospectionVerifier` asks the authorization server instead, and any object that responds to `verify(token)` and returns an `MCP::Server::OAuth::AccessToken` works too (see `MCP::Server::OAuth::TokenVerifier`).
+Clients discover the authorization server through an RFC 9728 Protected Resource Metadata document. It is served at the origin root (`/.well-known/oauth-protected-resource/mcp` for a server at `/mcp`) and without authentication, which is what the SDK's middleware does. `resource` must be the exact URL clients connect to.
+
+#### External authorization server
+
+With an identity provider that issues JWTs, the SDK's `JWTVerifier` (which needs the `jwt` gem) checks the signature, and the issuer and audience against the document. Build it once, at boot: it caches the signing keys per instance. `IntrospectionVerifier` asks the authorization server instead, and any object that responds to `verify(token)` and returns an `MCP::Server::OAuth::AccessToken` works too (see `MCP::Server::OAuth::TokenVerifier`).
 
 ```ruby
 # config/initializers/mcp_oauth.rb
@@ -137,7 +141,46 @@ Rails.application.config.x.mcp_token_verifier = MCP::Server::OAuth::JWTVerifier.
 Rails.application.config.middleware.use MCP::Server::OAuth::ProtectedResourceMetadataMiddleware, metadata
 ```
 
-Then put the SDK's bearer middleware in front of the controller, with the verifier, the same document and the required scopes. `use` scopes it to this controller. A request without a valid token gets a 401 whose `WWW-Authenticate` header points to the document, and a token missing a required scope gets a 403 `insufficient_scope`. `mcp_context` only runs for accepted requests, and finds the verified `MCP::Server::OAuth::AccessToken` in the env:
+#### Authorization server in the same app (Doorkeeper)
+
+The document names the app itself, and the verifier looks the token up in Doorkeeper's table instead of checking a signature:
+
+```ruby
+# config/initializers/mcp_oauth.rb
+metadata = MCP::Server::OAuth::ProtectedResourceMetadata.new(
+  resource: 'https://app.example.com/mcp',
+  authorization_servers: [ 'https://app.example.com' ],
+  scopes_supported: %w[mcp:tools],
+)
+Rails.application.config.x.mcp_resource_metadata = metadata
+Rails.application.config.middleware.use MCP::Server::OAuth::ProtectedResourceMetadataMiddleware, metadata
+```
+
+```ruby
+# app/mcp/doorkeeper_token_verifier.rb
+class DoorkeeperTokenVerifier
+  def verify(token)
+    access_token = Doorkeeper::AccessToken.by_token(token)
+    raise MCP::Server::OAuth::InvalidTokenError unless access_token&.accessible?
+
+    MCP::Server::OAuth::AccessToken.new(
+      token:, scopes: access_token.scopes.to_a, subject: access_token.resource_owner_id.to_s,
+      expires_at: access_token.expires_at&.to_i, client_id: access_token.application&.uid,
+    )
+  end
+end
+```
+
+Doorkeeper serves `/oauth/authorize` and `/oauth/token` with PKCE. MCP clients need two more things that Doorkeeper 5.9 does not provide:
+
+- the authorization server metadata (RFC 8414) at `/.well-known/oauth-authorization-server`, whose `issuer` must equal the URL in `authorization_servers` and whose `code_challenge_methods_supported` must include `S256`;
+- a way to obtain a `client_id`: a Doorkeeper application registered beforehand, support for Client ID Metadata Documents, or Dynamic Client Registration (RFC 7591).
+
+Doorkeeper tokens are not bound to the MCP endpoint: any token of the app that carries the required scope is accepted.
+
+#### Protecting the controller
+
+Put the SDK's bearer middleware in front of the controller, with the verifier, the same document and the required scopes. `use` scopes it to this controller. A request without a valid token gets a 401 whose `WWW-Authenticate` header points to the document, and a token missing a required scope gets a 403 `insufficient_scope`. `mcp_context` only runs for accepted requests, and finds the verified `MCP::Server::OAuth::AccessToken` in the env:
 
 ```ruby
 class McpController < ApplicationController
@@ -152,6 +195,8 @@ class McpController < ApplicationController
   def mcp_context = { user: User.find_by(id: request.env[MCP::Server::OAuth::ENV_KEY].subject) }
 end
 ```
+
+With Doorkeeper, pass `token_verifier: DoorkeeperTokenVerifier.new`.
 
 The transport reads the same token from the env and does not verify it again. Passing `token_verifier:` through `mcp_transport_options` instead also protects the endpoint, but the transport then verifies the token after `mcp_context` has run, so the context cannot use it.
 
