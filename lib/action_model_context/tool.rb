@@ -11,6 +11,15 @@ module ActionModelContext
     primitive kind: :tools, suffix: 'Tool'
 
     ARGUMENT_TYPES = %i[string integer number boolean array object].freeze
+    # JSON Schema 2020-12, the dialect MCP mandates (SEP-1613), minus type and required that argument sets itself.
+    SCHEMA_KEYWORDS = %w[
+      $id $schema $ref $anchor $dynamicRef $dynamicAnchor $vocabulary $comment $defs
+      prefixItems items contains additionalProperties properties patternProperties dependentSchemas propertyNames
+      if then else allOf anyOf oneOf not unevaluatedItems unevaluatedProperties
+      const enum multipleOf maximum exclusiveMaximum minimum exclusiveMinimum maxLength minLength pattern
+      maxItems minItems uniqueItems maxContains minContains maxProperties minProperties dependentRequired
+      title description default deprecated readOnly writeOnly examples format contentEncoding contentMediaType contentSchema
+    ].freeze
 
     class_attribute :declared_annotations, instance_accessor: false, instance_predicate: false
     class_attribute :arguments, instance_accessor: false, instance_predicate: false, default: {}.freeze
@@ -20,6 +29,9 @@ module ActionModelContext
 
       def argument(name, type, required: false, description: nil, enum: nil, items: nil, properties: nil, null: false, **keywords)
         raise ArgumentError, "unknown argument type #{type.inspect}" unless ARGUMENT_TYPES.include?(type)
+
+        unknown = keywords.keys.reject { |key| SCHEMA_KEYWORDS.include?(key.to_s.camelize(:lower)) }
+        raise ArgumentError, "unknown JSON Schema keyword #{unknown.first.inspect} for argument #{name.inspect}" if unknown.any?
 
         self.arguments = arguments.merge(
           name.to_sym => { type:, required:, description:, enum:, items:, properties:, null:, keywords: },

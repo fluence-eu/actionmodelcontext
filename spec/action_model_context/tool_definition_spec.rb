@@ -48,6 +48,17 @@ RSpec.describe ActionModelContext::Tool do
     )
   end
 
+  it 'passes the keywords named after Ruby keywords or starting with $' do
+    tool = stub_const('FindUserTool', Class.new(described_class) do
+      argument :code, :string, if: { minLength: 2 }, then: { pattern: '^[A-Z]' }, not: { const: 'XX' }, '$comment': 'ISO code', read_only: true
+    end)
+    expect(schema_of(tool)[:inputSchema][:properties][:code]).to eq(
+      type: 'string', if: { minLength: 2 }, then: { pattern: '^[A-Z]' }, not: { const: 'XX' }, '$comment': 'ISO code', readOnly: true,
+    )
+  end
+
+  it('rejects a keyword outside JSON Schema 2020-12') { expect { Class.new(described_class).argument(:ids, :array, max_itmes: 50) }.to raise_error(ArgumentError, /max_itmes/) }
+
   it 'accepts null with null: true' do
     tool = stub_const('FindUserTool', Class.new(described_class) { argument :due_on, :string, null: true })
     expect(schema_of(tool)[:inputSchema][:properties][:due_on]).to eq(type: %w[string null])
