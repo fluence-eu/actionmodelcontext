@@ -3,6 +3,8 @@ require 'rails_helper'
 RSpec.describe ActionModelContext::Tool do
   def schema_of(tool) = tool.to_mcp(context: nil).to_h
 
+  after { I18n.backend.reload! }
+
   let(:refund) do
     stub_const('Billing::RefundTool', Class.new(described_class) { argument :amount, :integer, required: true })
   end
@@ -83,6 +85,12 @@ RSpec.describe ActionModelContext::Tool do
 
   it 'reads argument descriptions from I18n' do
     expect(schema_of(refund)[:inputSchema][:properties][:amount][:description]).to eq('Amount in cents')
+  end
+
+  it 'reads an argument description written as a hash with its title' do
+    tool = stub_const('FindUserTool', Class.new(described_class) { argument :email, :string })
+    I18n.backend.store_translations(:en, action_model_context: { tools: { find_user: { arguments: { email: { title: 'Email', description: 'Exact email' } } } } })
+    expect(schema_of(tool)[:inputSchema][:properties][:email][:description]).to eq('Exact email')
   end
 
   it 'follows Rails fallbacks' do

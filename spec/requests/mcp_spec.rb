@@ -67,6 +67,23 @@ RSpec.describe 'MCP endpoint', type: :request do
         expect(subscriber.reports.sole.last[:context]).to include(mcp_method: 'resources/read', mcp_name: 'users://42')
       end
 
+      context 'with a failing prompt and resource' do
+        after { Rails.application.reloader.reload! }
+
+        it 'names them in the report context' do
+          stub_const('BrokenPrompt', Class.new(ApplicationPrompt) { def call = raise('secret internals') })
+          stub_const('BrokenResource', Class.new(ApplicationResource) do
+            uri 'app://broken'
+            def read = raise('secret internals')
+          end)
+          rpc('prompts/get', { name: 'broken', arguments: {} })
+          rpc('resources/read', { uri: 'app://broken' })
+          expect(subscriber.reports.map { |_, options| options[:context] }).to match(
+            [ hash_including(mcp_method: 'prompts/get', mcp_name: 'broken'), hash_including(mcp_method: 'resources/read', mcp_name: 'app://broken') ],
+          )
+        end
+      end
+
       it 'reports once a token verifier plugged through mcp_transport_options that crashes' do
         controller = stub_const('VerifiedMcpController', Class.new(McpController) do
           private def mcp_transport_options = { token_verifier: Class.new { def verify(_token) = raise('JWKS unreachable') }.new }
