@@ -34,7 +34,7 @@ RSpec.describe ActionModelContext::Railtie do
     rails_oauth = Rails.application.config.action_model_context.oauth
     rails_oauth.token_verifier = ->(metadata) { "verifier for #{metadata.resource}" }
     described_class.config.to_prepare_blocks.each(&:call)
-    expect(rails_oauth.verifier).to eq('verifier for https://example.com/mcp')
+    expect(rails_oauth.verifier).to eq('verifier for https://example.com/backend/app/mcp')
   ensure
     rails_oauth.token_verifier = rails_oauth.verifier = nil
   end

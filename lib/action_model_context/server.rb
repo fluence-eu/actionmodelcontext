@@ -42,7 +42,15 @@ module ActionModelContext
     end
 
     def mcp_oauth = Rails.configuration.action_model_context.oauth
-    def mcp_resource_metadata_url = "#{request.base_url}#{request.script_name}#{ProtectedResourceMetadataMiddleware::PATH}"
+
+    # A proxy can strip the path prefix and pass on only X-Forwarded-Host, leaving SCRIPT_NAME empty:
+    # the public URL declared in resource is then the one place that still holds the prefix.
+    def mcp_resource_metadata_url
+      resource = mcp_oauth.resource
+      return "#{resource.delete_suffix(request.path_info)}#{ProtectedResourceMetadataMiddleware::PATH}" if resource&.end_with?(request.path_info)
+
+      "#{request.base_url}#{request.script_name}#{ProtectedResourceMetadataMiddleware::PATH}"
+    end
 
     def render_mcp_challenge(challenge)
       self.status, challenge_headers, self.response_body = challenge
