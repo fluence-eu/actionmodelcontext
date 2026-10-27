@@ -62,16 +62,14 @@ module ActionModelContext
     def call(**) = raise(NotImplementedError, "#{self.class.name}#call is not implemented")
 
     def call_mcp(arguments)
-      to_response(invoke(arguments))
+      to_response(with_rescue { invoke(arguments) })
     rescue Error => e
       MCP::Tool::Response.new([ { type: 'text', text: e.message } ], error: true)
     end
 
     private
 
-    def invoke(arguments)
-      with_rescue { call(**arguments.slice(*self.class.argument_names)) }
-    end
+    def invoke(arguments) = call(**arguments.slice(*self.class.argument_names))
 
     def to_response(result)
       case result

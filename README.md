@@ -48,6 +48,20 @@ end
 
 A handler that returns normally has handled the exception, as in a Rails controller: its return value becomes the result, converted like the value of `call` (or of `read` in a resource). To produce an error result instead, raise `ActionModelContext::Error` from the handler, as above. When no handler matches the exception, its `cause` is tried next, as in Rails.
 
+To wrap every call of a tool base, override the private `invoke(arguments)` and call `super`, as `process_action` in a controller. It receives the arguments as the client sent them, before they are sliced to the declared ones, and returns the value of `call` before its conversion. `rescue_from` covers it:
+
+```ruby
+class ApplicationTool < ActionModelContext::Tool
+  private
+
+  def invoke(arguments)
+    raise ActionModelContext::Error, 'Archived records are read-only' if arguments.key?(:archived)
+
+    Current.set(user: context[:user]) { super }
+  end
+end
+```
+
 ## Resources
 
 ```ruby
