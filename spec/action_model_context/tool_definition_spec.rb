@@ -35,6 +35,24 @@ RSpec.describe ActionModelContext::Tool do
     expect(schema_of(tool)[:inputSchema][:properties][:filter]).to eq(type: 'object', properties: { id: { type: 'integer' } })
   end
 
+  it 'passes other JSON Schema keywords through, camelized' do
+    tool = stub_const('FindUserTool', Class.new(described_class) do
+      argument :since, :string, format: 'date'
+      argument :ids, :array, items: { type: 'integer' }, max_items: 50
+      argument :limit, :integer, minimum: 1, exclusiveMaximum: 100
+    end)
+    expect(schema_of(tool)[:inputSchema][:properties]).to eq(
+      since: { type: 'string', format: 'date' },
+      ids: { type: 'array', items: { type: 'integer' }, maxItems: 50 },
+      limit: { type: 'integer', minimum: 1, exclusiveMaximum: 100 },
+    )
+  end
+
+  it 'accepts null with null: true' do
+    tool = stub_const('FindUserTool', Class.new(described_class) { argument :due_on, :string, null: true })
+    expect(schema_of(tool)[:inputSchema][:properties][:due_on]).to eq(type: %w[string null])
+  end
+
   it('rejects unknown types') { expect { Class.new(described_class).argument(:x, :date) }.to raise_error(ArgumentError) }
 
   it 'does not leak child arguments to the parent' do

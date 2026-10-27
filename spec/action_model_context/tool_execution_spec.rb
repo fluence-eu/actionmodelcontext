@@ -28,6 +28,12 @@ RSpec.describe ActionModelContext::Tool, 'execution' do
     expect(call(message: 'hi')[:result][:content].first[:text]).to eq('hi')
   end
 
+  context 'with a null: true argument' do
+    let(:tool_class) { stub_const('DueTool', Class.new(described_class) { argument :due_on, :string, null: true; def call(due_on: 'none') = due_on.inspect }) }
+
+    it('accepts null') { expect(call(due_on: nil)[:result]).to include(isError: false, content: [ { type: 'text', text: 'nil' } ]) }
+  end
+
   context 'with a Hash result' do
     let(:tool_class) { WhoAmITool }
 
