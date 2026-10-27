@@ -1,0 +1,7 @@
+en:
+  action_model_context:
+    tools:
+      billing_refund:
+        description: Refund an invoice
+        arguments:
+          amount: Amount in cents

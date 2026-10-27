@@ -1,0 +1,10 @@
+class <%= class_name %>Prompt < ApplicationPrompt
+  description '<%= class_name.underscore.tr('/', ' ').humanize %>'
+<% arguments.each do |argument| -%>
+  argument :<%= argument.name %><%= ', required: true' if argument.required %>
+<% end -%>
+
+  def call<%= "(#{signature})" if signature.present? %>
+    raise ActionModelContext::Error, '<%= class_name %>Prompt is not implemented yet'
+  end
+end
