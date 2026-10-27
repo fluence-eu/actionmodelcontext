@@ -24,6 +24,13 @@ module ActionModelContext
     def mcp_server_options = { name: Rails.application.class.module_parent_name.underscore }
     def mcp_transport_options = {}
 
+    def request_mcp_authentication
+      scope = Rails.configuration.action_model_context.oauth.scopes&.join(' ')
+      resource_metadata = "#{request.base_url}#{request.script_name}#{ProtectedResourceMetadataMiddleware::PATH}"
+      self.status, challenge_headers, self.response_body = MCP::Server::OAuth::Challenge.missing_token_response(scope:, resource_metadata:)
+      headers.merge!(challenge_headers)
+    end
+
     # handle_request, not call(env): Rails already read the body into RAW_POST_DATA to log params, and only
     # ActionDispatch::Request#body replays it when rack.input cannot rewind (optional since Rack 3).
     def serve_mcp

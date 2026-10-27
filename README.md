@@ -133,9 +133,9 @@ The gem imposes no authentication. Three hooks are available, all private and ov
 
 ### OAuth
 
-The MCP server is an OAuth 2.1 resource server: it checks bearer tokens issued by an authorization server (Doorkeeper in the same app, or an external identity provider) and never issues them. The SDK implements this role.
+The MCP server is an OAuth 2.1 resource server: it accepts bearer tokens issued by an authorization server (Doorkeeper in the same app, or an external identity provider) and never issues them. The SDK checks them, unless the app authenticates the request itself (see the last case below).
 
-Clients discover the authorization server through an RFC 9728 Protected Resource Metadata document. It is served at the origin root (`/.well-known/oauth-protected-resource/mcp` for a server at `/mcp`) and without authentication, which is what the SDK's middleware does. `resource` must be the exact URL clients connect to.
+Clients discover the authorization server through an RFC 9728 Protected Resource Metadata document, served without authentication. The SDK's middleware serves it at the origin root (`/.well-known/oauth-protected-resource/mcp` for a server at `/mcp`); for an app mounted under a path prefix, the gem serves it under that prefix (see the last case below). `resource` must be the exact URL clients connect to.
 
 #### External authorization server
 
@@ -213,6 +213,26 @@ end
 With Doorkeeper, pass `token_verifier: DoorkeeperTokenVerifier.new`.
 
 The transport reads the same token from the env and does not verify it again. Passing `token_verifier:` through `mcp_transport_options` instead also protects the endpoint, but the transport then verifies the token after `mcp_context` has run, so the context cannot use it.
+
+#### Authentication decided by the app
+
+When the app decides who calls, through its own authentication or a proxy in front of it, instead of a token verifier given to the SDK, the gem publishes the document and answers the 401. Configure it under `config.action_model_context.oauth`, in `config/application.rb` or per environment, where `resource` is the public URL of the MCP endpoint, prefix included. Without `resource`, the gem publishes nothing:
+
+```ruby
+# config/application.rb
+config.action_model_context.oauth.resource = 'https://example.com/backend/app/mcp'
+config.action_model_context.oauth.authorization_servers = [ 'https://auth.example.com' ]
+config.action_model_context.oauth.scopes = %w[mcp:tools]
+```
+
+The gem serves the document through the SDK's middleware, at the RFC 9728 path when requests for it reach the app, and at `/.well-known/oauth-protected-resource` relative to the app, the path an app mounted under a prefix receives (`https://example.com/backend/app/.well-known/oauth-protected-resource`). `request_mcp_authentication` answers the SDK's 401 challenge: its `resource_metadata` is built from the host and prefix of the request, its `scope` lists `oauth.scopes`. Behind a proxy, the app must receive the public host and scheme (`X-Forwarded-Host`, `X-Forwarded-Proto`), which Rails reads; otherwise the challenge names the internal address.
+
+```ruby
+class McpController < ApplicationController
+  include ActionModelContext::Server
+  before_action { request_mcp_authentication unless user_signed_in? }
+end
+```
 
 ### Host and Origin checks (DNS rebinding)
 
