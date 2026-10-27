@@ -20,6 +20,18 @@ RSpec.describe ActionModelContext::Railtie do
     expect(oauth.metadata.resource).to eq('https://example.com/mcp')
   end
 
+  it 'puts the optional RFC 9728 fields in the document' do
+    oauth.resource = 'https://example.com/mcp'
+    oauth.authorization_servers = [ 'https://auth.example.com' ]
+    oauth.resource_name = 'Example'
+    oauth.resource_documentation = 'https://example.com/docs'
+    oauth.extra = { resource_policy_uri: 'https://example.com/policy' }
+    run_oauth_initializer
+    expect(JSON.parse(oauth.metadata.to_json)).to include(
+      'resource_name' => 'Example', 'resource_documentation' => 'https://example.com/docs', 'resource_policy_uri' => 'https://example.com/policy',
+    )
+  end
+
   it 'publishes nothing without a resource' do
     run_oauth_initializer
     expect([ oauth.metadata, middlewares ]).to eq([ nil, [] ])

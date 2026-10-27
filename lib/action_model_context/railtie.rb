@@ -18,6 +18,7 @@ module ActionModelContext
 
       oauth.metadata = MCP::Server::OAuth::ProtectedResourceMetadata.new(
         resource: oauth.resource, authorization_servers: oauth.authorization_servers, scopes_supported: oauth.scopes,
+        resource_name: oauth.resource_name, resource_documentation: oauth.resource_documentation, extra: oauth.extra || {},
       )
       app.middleware.use ProtectedResourceMetadataMiddleware, oauth.metadata
     end
