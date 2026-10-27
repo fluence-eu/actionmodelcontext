@@ -1,14 +1,14 @@
-require "active_support/core_ext/class/attribute"
-require "active_support/rescuable"
-require "active_support/core_ext/string/inflections"
-require "active_support/core_ext/enumerable"
-require "active_support/core_ext/object/blank"
+require 'active_support/core_ext/class/attribute'
+require 'active_support/rescuable'
+require 'active_support/core_ext/string/inflections'
+require 'active_support/core_ext/enumerable'
+require 'active_support/core_ext/object/blank'
 
 module ActionModelContext
   class Tool
     include Primitive
 
-    primitive kind: :tools, suffix: "Tool"
+    primitive kind: :tools, suffix: 'Tool'
 
     ARGUMENT_TYPES = %i[string integer number boolean array object].freeze
 
@@ -46,7 +46,7 @@ module ActionModelContext
       def input_schema
         properties = arguments.to_h { |name, spec| [ name, property_schema(name, spec) ] }
         required = arguments.select { |_, spec| spec[:required] }.keys.map(&:to_s)
-        { type: "object", properties:, required: }.compact_blank
+        { type: 'object', properties:, required: }.compact_blank
       end
 
       def property_schema(name, spec)
@@ -60,7 +60,7 @@ module ActionModelContext
     def call_mcp(arguments)
       to_response(invoke(arguments))
     rescue Error => e
-      MCP::Tool::Response.new([ { type: "text", text: e.message } ], error: true)
+      MCP::Tool::Response.new([ { type: 'text', text: e.message } ], error: true)
     end
 
     private
@@ -72,9 +72,9 @@ module ActionModelContext
     def to_response(result)
       case result
       when MCP::Tool::Response then result
-      when String then MCP::Tool::Response.new([ { type: "text", text: result } ])
-      when Hash then MCP::Tool::Response.new([ { type: "text", text: result.to_json } ], structured_content: result)
-      when Array then MCP::Tool::Response.new([ { type: "text", text: result.to_json } ])
+      when String then MCP::Tool::Response.new([ { type: 'text', text: result } ])
+      when Hash then MCP::Tool::Response.new([ { type: 'text', text: result.to_json } ], structured_content: result)
+      when Array then MCP::Tool::Response.new([ { type: 'text', text: result.to_json } ])
       else raise TypeError, "#{self.class.name}#call or its rescue_from handler must return a String, Hash, Array or MCP::Tool::Response, got #{result.class}"
       end
     end

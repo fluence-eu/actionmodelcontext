@@ -1,8 +1,8 @@
-require "rails_helper"
+require 'rails_helper'
 
-RSpec.describe ActionModelContext::Tool, "execution" do
+RSpec.describe ActionModelContext::Tool, 'execution' do
   let(:reported) { [] }
-  let(:context) { { user: "ada" } }
+  let(:context) { { user: 'ada' } }
   let(:arguments) { {} }
   let(:tool_class) { EchoTool }
   let(:response) { call(**arguments) }
@@ -13,110 +13,110 @@ RSpec.describe ActionModelContext::Tool, "execution" do
       tools: [ tool_class.to_mcp(context:) ],
       configuration: MCP::Configuration.new(exception_reporter: ->(e, _) { reported << e }),
     )
-    server.handle({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: tool_class.tool_name, arguments: args } })
+    server.handle({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: tool_class.tool_name, arguments: args } })
   end
 
-  it "returns text for a String" do
-    expect(call(message: "hi", times: 2)[:result][:content]).to eq([ { type: "text", text: "hihi" } ])
+  it 'returns text for a String' do
+    expect(call(message: 'hi', times: 2)[:result][:content]).to eq([ { type: 'text', text: 'hihi' } ])
   end
 
-  it "ignores arguments outside the schema" do
-    expect(call(message: "hi", bogus: 1)[:result][:content].first[:text]).to eq("hi")
+  it 'ignores arguments outside the schema' do
+    expect(call(message: 'hi', bogus: 1)[:result][:content].first[:text]).to eq('hi')
   end
 
-  it "lets call defaults apply when an optional argument is absent" do
-    expect(call(message: "hi")[:result][:content].first[:text]).to eq("hi")
+  it 'lets call defaults apply when an optional argument is absent' do
+    expect(call(message: 'hi')[:result][:content].first[:text]).to eq('hi')
   end
 
-  context "with a Hash result" do
+  context 'with a Hash result' do
     let(:tool_class) { WhoAmITool }
 
-    it "fills structuredContent and JSON text" do
-      expect(result[:structuredContent]).to eq(user: "ada")
-      expect(JSON.parse(result[:content].first[:text])).to eq("user" => "ada")
+    it 'fills structuredContent and JSON text' do
+      expect(result[:structuredContent]).to eq(user: 'ada')
+      expect(JSON.parse(result[:content].first[:text])).to eq('user' => 'ada')
     end
   end
 
-  context "with an Array result" do
-    let(:tool_class) { stub_const("ListTool", Class.new(described_class) { def call = [ 1, 2 ] }) }
+  context 'with an Array result' do
+    let(:tool_class) { stub_const('ListTool', Class.new(described_class) { def call = [ 1, 2 ] }) }
 
-    it "returns JSON text only" do
+    it 'returns JSON text only' do
       expect(result).not_to have_key(:structuredContent)
-      expect(result[:content]).to eq([ { type: "text", text: "[1,2]" } ])
+      expect(result[:content]).to eq([ { type: 'text', text: '[1,2]' } ])
     end
   end
 
-  context "with a Response result" do
+  context 'with a Response result' do
     let(:tool_class) do
-      stub_const("RawTool", Class.new(described_class) { def call = MCP::Tool::Response.new([ { type: "text", text: "raw" } ]) })
+      stub_const('RawTool', Class.new(described_class) { def call = MCP::Tool::Response.new([ { type: 'text', text: 'raw' } ]) })
     end
 
-    it("passes it through") { expect(result[:content]).to eq([ { type: "text", text: "raw" } ]) }
+    it('passes it through') { expect(result[:content]).to eq([ { type: 'text', text: 'raw' } ]) }
   end
 
-  context "when rescue_from maps to ActionModelContext::Error" do
+  context 'when rescue_from maps to ActionModelContext::Error' do
     let(:tool_class) { WhoAmITool }
     let(:context) { {} }
 
-    it "returns isError with the message" do
-      expect(result).to include(isError: true, content: [ { type: "text", text: "Unknown user" } ])
+    it 'returns isError with the message' do
+      expect(result).to include(isError: true, content: [ { type: 'text', text: 'Unknown user' } ])
     end
   end
 
-  context "when a rescue_from handler returns" do
+  context 'when a rescue_from handler returns' do
     let(:tool_class) do
-      stub_const("FallbackTool", Class.new(described_class) do
-        rescue_from(KeyError) { "Anonymous" }
+      stub_const('FallbackTool', Class.new(described_class) do
+        rescue_from(KeyError) { 'Anonymous' }
         def call = context.fetch(:missing)
       end)
     end
 
-    it("converts its value like call's") { expect(result).to include(isError: false, content: [ { type: "text", text: "Anonymous" } ]) }
+    it("converts its value like call's") { expect(result).to include(isError: false, content: [ { type: 'text', text: 'Anonymous' } ]) }
   end
 
-  context "when only the cause has a rescue_from handler" do
+  context 'when only the cause has a rescue_from handler' do
     let(:tool_class) do
-      stub_const("WrappingTool", Class.new(described_class) do
+      stub_const('WrappingTool', Class.new(described_class) do
         rescue_from(KeyError) { |error| "Rescued #{error.key}" }
         def call
           context.fetch(:missing)
         rescue KeyError
-          raise "wrapped"
+          raise 'wrapped'
         end
       end)
     end
 
-    it("hands the cause to that handler") { expect(result).to include(content: [ { type: "text", text: "Rescued missing" } ]) }
+    it('hands the cause to that handler') { expect(result).to include(content: [ { type: 'text', text: 'Rescued missing' } ]) }
   end
 
-  context "when call raises ActionModelContext::Error directly" do
+  context 'when call raises ActionModelContext::Error directly' do
     let(:tool_class) do
-      stub_const("DeniedTool", Class.new(described_class) { def call = raise(ActionModelContext::Error, "Denied") })
+      stub_const('DeniedTool', Class.new(described_class) { def call = raise(ActionModelContext::Error, 'Denied') })
     end
 
-    it "returns isError with the message" do
-      expect(result).to include(isError: true, content: [ { type: "text", text: "Denied" } ])
+    it 'returns isError with the message' do
+      expect(result).to include(isError: true, content: [ { type: 'text', text: 'Denied' } ])
     end
   end
 
-  context "when call raises another exception" do
+  context 'when call raises another exception' do
     let(:tool_class) { FailingTool }
 
-    it "masks it as a JSON-RPC internal error" do
-      expect(response[:error][:message]).not_to include("secret internals")
+    it 'masks it as a JSON-RPC internal error' do
+      expect(response[:error][:message]).not_to include('secret internals')
     end
   end
 
-  context "with an unsupported return type" do
-    let(:tool_class) { stub_const("BadTool", Class.new(described_class) { def call = Object.new }) }
+  context 'with an unsupported return type' do
+    let(:tool_class) { stub_const('BadTool', Class.new(described_class) { def call = Object.new }) }
 
-    it "reports a TypeError" do
+    it 'reports a TypeError' do
       response
       expect(reported.first).to be_a(TypeError).and have_attributes(message: /BadTool#call or its rescue_from handler must return/)
     end
   end
 
-  it "raises NotImplementedError from the base call" do
+  it 'raises NotImplementedError from the base call' do
     expect { described_class.new(context:).call }.to raise_error(NotImplementedError)
   end
 end

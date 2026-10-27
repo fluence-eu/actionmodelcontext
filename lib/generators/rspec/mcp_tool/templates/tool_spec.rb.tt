@@ -1,13 +1,13 @@
-require "rails_helper"
-require "action_model_context/test_helper"
+require 'rails_helper'
+require 'action_model_context/test_helper'
 
 RSpec.describe <%= class_name %>Tool do
   include ActionModelContext::TestHelper
 
-  it "calls the tool" do
-    skip "Fill in the arguments and expectations"
+  it 'calls the tool' do
+    skip 'Fill in the arguments and expectations'
 
-    result = call_tool(<%= ["#{class_name}Tool", placeholders].reject(&:blank?).join(", ") %>)
+    result = call_tool(<%= ["#{class_name}Tool", placeholders].reject(&:blank?).join(', ') %>)
 
     expect(result).not_to be_error
   end

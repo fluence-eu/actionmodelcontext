@@ -1,3 +1,3 @@
 class FailingTool < ApplicationTool
-  def call = raise("secret internals")
+  def call = raise('secret internals')
 end

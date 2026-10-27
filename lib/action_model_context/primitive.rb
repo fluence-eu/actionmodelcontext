@@ -1,5 +1,5 @@
-require "active_support/concern"
-require "active_support/rescuable"
+require 'active_support/concern'
+require 'active_support/rescuable'
 
 module ActionModelContext
   module Primitive

@@ -5,7 +5,7 @@ module ActionModelContext
     def self.call(exception, _server_context)
       return if exception.is_a?(MCP::Server::RequestHandlerError) || exception.is_a?(MCP::Server::OAuth::Error)
 
-      Rails.error.report(exception, handled: true, severity: :error, source: "actionmodelcontext")
+      Rails.error.report(exception, handled: true, severity: :error, source: 'actionmodelcontext')
     end
   end
 end

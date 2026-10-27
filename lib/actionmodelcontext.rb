@@ -1,1 +1,1 @@
-require "action_model_context"
+require 'action_model_context'

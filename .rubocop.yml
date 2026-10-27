@@ -5,3 +5,8 @@ AllCops:
     - "spec/dummy/tmp/**/*"
     - "vendor/**/*"
     - "lib/generators/**/templates/**/*"
+
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+  Include:
+    - "**/*"

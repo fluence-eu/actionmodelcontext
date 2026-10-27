@@ -1,5 +1,5 @@
 class ReadmeResource < ApplicationResource
-  uri "app://readme"
+  uri 'app://readme'
 
-  def read = "Hello"
+  def read = 'Hello'
 end

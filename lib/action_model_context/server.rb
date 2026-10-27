@@ -1,4 +1,4 @@
-require "active_support/concern"
+require 'active_support/concern'
 
 module ActionModelContext
   module Server
@@ -9,7 +9,7 @@ module ActionModelContext
     end
 
     def self.discover(base_name, dir)
-      path = Rails.root.join("app/mcp", dir)
+      path = Rails.root.join('app/mcp', dir)
       Rails.autoloaders.main.eager_load_dir(path) if path.directory?
       base_name.safe_constantize&.descendants&.select(&:concrete?) || []
     end
@@ -33,13 +33,13 @@ module ActionModelContext
 
     def mcp_transport
       context = mcp_context
-      templates, resources = Server.discover("ApplicationResource", "resources").partition(&:template?)
+      templates, resources = Server.discover('ApplicationResource', 'resources').partition(&:template?)
       server = MCP::Server.new(
         **mcp_server_options,
-        tools: Server.discover("ApplicationTool", "tools").map { |tool| tool.to_mcp(context:) },
+        tools: Server.discover('ApplicationTool', 'tools').map { |tool| tool.to_mcp(context:) },
         resources: resources.map { |resource| resource.to_mcp(context:) },
         resource_templates: templates.map { |template| template.to_mcp(context:) },
-        prompts: Server.discover("ApplicationPrompt", "prompts").map { |prompt| prompt.to_mcp(context:) },
+        prompts: Server.discover('ApplicationPrompt', 'prompts').map { |prompt| prompt.to_mcp(context:) },
         capabilities: { tools: {}, resources: {}, prompts: {} },
       )
       # Host checking is left to Rails' config.hosts: the transport's own check rejects every Host but 127.0.0.1,

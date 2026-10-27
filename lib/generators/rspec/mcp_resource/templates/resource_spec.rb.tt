@@ -1,8 +1,8 @@
-require "rails_helper"
+require 'rails_helper'
 
 RSpec.describe <%= class_name %>Resource do
-  it "reads the resource" do
-    skip "Fill in the parameters and expectations"
+  it 'reads the resource' do
+    skip 'Fill in the parameters and expectations'
 
     resource = described_class.new(context: {})
 

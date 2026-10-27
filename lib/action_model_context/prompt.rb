@@ -1,10 +1,10 @@
-require "active_support/core_ext/class/attribute"
+require 'active_support/core_ext/class/attribute'
 
 module ActionModelContext
   class Prompt
     include Primitive
 
-    primitive kind: :prompts, suffix: "Prompt"
+    primitive kind: :prompts, suffix: 'Prompt'
 
     class_attribute :arguments, instance_accessor: false, instance_predicate: false, default: {}.freeze
 
@@ -48,7 +48,7 @@ module ActionModelContext
 
     def to_result(result)
       messages = case result
-      when String then [ message("user", result) ]
+      when String then [ message('user', result) ]
       when Array then result.map { |item| message(item.fetch(:role), item.fetch(:content)) }
       else raise TypeError, "#{self.class.name}#call or its rescue_from handler must return a String or Array, got #{result.class}"
       end

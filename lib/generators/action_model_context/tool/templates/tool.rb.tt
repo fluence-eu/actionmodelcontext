@@ -1,10 +1,10 @@
 class <%= class_name %>Tool < ApplicationTool
-  description "<%= class_name.underscore.tr("/", " ").humanize %>"
+  description '<%= class_name.underscore.tr('/', ' ').humanize %>'
 <% arguments.each do |argument| -%>
-  argument :<%= argument.name %>, :<%= argument.type %><%= ", required: true" if argument.required %>
+  argument :<%= argument.name %>, :<%= argument.type %><%= ', required: true' if argument.required %>
 <% end -%>
 
   def call<%= "(#{signature})" if signature.present? %>
-    raise ActionModelContext::Error, "<%= class_name %>Tool is not implemented yet"
+    raise ActionModelContext::Error, '<%= class_name %>Tool is not implemented yet'
   end
 end

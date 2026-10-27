@@ -1,10 +1,10 @@
-require "active_support/core_ext/class/attribute"
+require 'active_support/core_ext/class/attribute'
 
 module ActionModelContext
   class Resource
     include Primitive
 
-    primitive kind: :resources, suffix: "Resource"
+    primitive kind: :resources, suffix: 'Resource'
 
     URI_VARIABLE = /\{([A-Za-z_]\w*)\}/
 
@@ -27,7 +27,7 @@ module ActionModelContext
 
       def concrete? = !uri.nil? && instance_method(:read).owner != Resource
 
-      def template? = uri.include?("{")
+      def template? = uri.include?('{')
 
       def uri_variables = uri.scan(URI_VARIABLE).flatten.map(&:to_sym)
 
@@ -60,8 +60,8 @@ module ActionModelContext
 
     def to_contents(result, params)
       text, default_mime = case result
-      when String then [ result, "text/plain" ]
-      when Hash, Array then [ result.to_json, "application/json" ]
+      when String then [ result, 'text/plain' ]
+      when Hash, Array then [ result.to_json, 'application/json' ]
       else raise TypeError, "#{self.class.name}#read or its rescue_from handler must return a String, Hash or Array, got #{result.class}"
       end
       uri = self.class.uri.gsub(URI_VARIABLE) { params.fetch(Regexp.last_match(1).to_sym) }

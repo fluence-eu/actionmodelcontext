@@ -1,8 +1,8 @@
-require "test_helper"
+require 'test_helper'
 
 class <%= class_name %>PromptTest < ActiveSupport::TestCase
-  test "builds the prompt" do
-    skip "Fill in the arguments and expectations"
+  test 'builds the prompt' do
+    skip 'Fill in the arguments and expectations'
 
     prompt = <%= class_name %>Prompt.new(context: {})
 
