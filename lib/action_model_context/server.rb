@@ -6,6 +6,7 @@ module ActionModelContext
 
     included do
       skip_forgery_protection only: %i[show create destroy] if respond_to?(:skip_forgery_protection)
+      before_action :verify_mcp_access_token, only: %i[show create destroy], if: -> { mcp_oauth.verifier }
     end
 
     def self.discover(base_name, dir)
@@ -25,9 +26,26 @@ module ActionModelContext
     def mcp_transport_options = {}
 
     def request_mcp_authentication
-      scope = Rails.configuration.action_model_context.oauth.scopes&.join(' ')
-      resource_metadata = "#{request.base_url}#{request.script_name}#{ProtectedResourceMetadataMiddleware::PATH}"
-      self.status, challenge_headers, self.response_body = MCP::Server::OAuth::Challenge.missing_token_response(scope:, resource_metadata:)
+      render_mcp_challenge(MCP::Server::OAuth::Challenge.missing_token_response(scope: mcp_oauth.scopes&.join(' '), resource_metadata: mcp_resource_metadata_url))
+    end
+
+    def mcp_access_token = request.env[MCP::Server::OAuth::ENV_KEY]
+
+    def verify_mcp_access_token
+      authenticator = MCP::Server::OAuth::Authenticator.new(
+        token_verifier: mcp_oauth.verifier, required_scopes: mcp_oauth.scopes,
+        resource_metadata: mcp_oauth.metadata, resource_metadata_url: mcp_resource_metadata_url,
+      )
+      request.env[MCP::Server::OAuth::ENV_KEY] = authenticator.authenticate(request.env)
+    rescue MCP::Server::OAuth::Error => e
+      render_mcp_challenge(authenticator.challenge_response(e))
+    end
+
+    def mcp_oauth = Rails.configuration.action_model_context.oauth
+    def mcp_resource_metadata_url = "#{request.base_url}#{request.script_name}#{ProtectedResourceMetadataMiddleware::PATH}"
+
+    def render_mcp_challenge(challenge)
+      self.status, challenge_headers, self.response_body = challenge
       headers.merge!(challenge_headers)
     end
 

@@ -13,12 +13,19 @@ module ActionModelContext
 
     initializer 'action_model_context.oauth', after: :load_config_initializers do |app|
       oauth = app.config.action_model_context.oauth
+      raise ArgumentError, 'config.action_model_context.oauth.token_verifier requires oauth.resource' if oauth.token_verifier && !oauth.resource
       next unless oauth.resource
 
-      metadata = MCP::Server::OAuth::ProtectedResourceMetadata.new(
+      oauth.metadata = MCP::Server::OAuth::ProtectedResourceMetadata.new(
         resource: oauth.resource, authorization_servers: oauth.authorization_servers, scopes_supported: oauth.scopes,
       )
-      app.middleware.use ProtectedResourceMetadataMiddleware, metadata
+      app.middleware.use ProtectedResourceMetadataMiddleware, oauth.metadata
+    end
+
+    # The verifier may name an app class, which cannot autoload while initializers run: DoorkeeperTokenVerifier in app/mcp.
+    config.to_prepare do
+      oauth = Rails.application.config.action_model_context.oauth
+      oauth.verifier = oauth.token_verifier&.call(oauth.metadata)
     end
   end
 end
