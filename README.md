@@ -36,7 +36,7 @@ end
 
 `argument(name, type, required: false, description: nil, enum: nil, items: nil, properties: nil, null: false, **keywords)` where `type` is one of `:string`, `:integer`, `:number`, `:boolean`, `:array`, `:object`. `null: true` also accepts `null` (`"type": ["string", "null"]`). Any other JSON Schema keyword goes through as is, its name camelized: `argument :ids, :array, items: { type: 'integer' }, max_items: 50` emits `maxItems`. The SDK validates the arguments against the schema before `call`, so `minimum`, `maxItems` and the like are enforced; `format` is not. The tool name defaults to the underscored class name without the `Tool` suffix (`echo`); override it with `tool_name 'other'`. `title`, `description` and `annotations(**hints)` are class-level macros.
 
-`call` may return a `String`, a `Hash` (sent as text and as structured content), an `Array`, or an `MCP::Tool::Response`. Raise `ActionModelContext::Error` to return an error result to the model with your message; any other exception is reported through `Rails.error` (`severity: :error`, `source: 'actionmodelcontext'`). `rescue_from` works inside a primitive:
+`call` may return a `String`, a `Hash` (sent as text and as structured content), an `Array`, or an `MCP::Tool::Response`. Raise `ActionModelContext::Error` to return an error result to the model with your message; any other exception is reported through `Rails.error` (`severity: :error`, `source: 'actionmodelcontext'`), with the JSON-RPC method and the primitive's name or URI as `mcp_method` and `mcp_name` in the context, never the arguments. `rescue_from` works inside a primitive:
 
 ```ruby
 class WhoAmITool < ApplicationTool

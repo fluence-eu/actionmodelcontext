@@ -58,7 +58,13 @@ RSpec.describe 'MCP endpoint', type: :request do
         call_tool('failing')
         call_tool('missing')
         post_json('{')
-        expect(subscriber.reports).to contain_exactly([ an_instance_of(RuntimeError), hash_including(handled: true, severity: :error, source: 'actionmodelcontext') ])
+        context = hash_including(mcp_method: 'tools/call', mcp_name: 'failing')
+        expect(subscriber.reports).to contain_exactly([ an_instance_of(RuntimeError), hash_including(handled: true, severity: :error, source: 'actionmodelcontext', context:) ])
+      end
+
+      it 'names a request handed over parsed, as the 2026-07-28 lifecycle does' do
+        ActionModelContext::ErrorReporter.call(RuntimeError.new, { request: request_body('resources/read', { uri: 'users://42' }) })
+        expect(subscriber.reports.sole.last[:context]).to include(mcp_method: 'resources/read', mcp_name: 'users://42')
       end
 
       it 'reports once a token verifier plugged through mcp_transport_options that crashes' do
