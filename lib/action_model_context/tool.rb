@@ -33,7 +33,7 @@ module ActionModelContext
         unknown = keywords.keys.reject { |key| SCHEMA_KEYWORDS.include?(key.to_s.camelize(:lower)) }
         raise ArgumentError, "unknown JSON Schema keyword #{unknown.first.inspect} for argument #{name.inspect}" if unknown.any?
 
-        self.arguments = arguments.merge(name.to_sym => { type:, required:, null:, keywords: }).freeze
+        self.arguments = arguments.merge(name.to_sym => keywords.merge(type:, required:, null:)).freeze
       end
 
       def argument_names = arguments.keys
@@ -63,9 +63,9 @@ module ActionModelContext
 
       def property_schema(name, spec)
         type = spec[:null] ? [ spec[:type].to_s, 'null' ] : spec[:type].to_s
-        keywords = spec[:keywords].transform_keys { |key| key.to_s.camelize(:lower).to_sym }
+        keywords = spec.except(:required, :null).transform_keys { |key| key.to_s.camelize(:lower).to_sym }
         description = keywords[:description] || Translation.lookup(i18n_kind, tool_name, :arguments, name)
-        { type:, **keywords, description: }.compact
+        { **keywords, type:, description: }.compact
       end
     end
 
