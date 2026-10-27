@@ -28,6 +28,33 @@ RSpec.describe ActionModelContext::Tool, 'execution' do
     expect(call(message: 'hi')[:result][:content].first[:text]).to eq('hi')
   end
 
+  context 'with a null: true argument' do
+    let(:tool_class) { stub_const('DueTool', Class.new(described_class) { argument :due_on, :string, null: true; def call(due_on: 'none') = due_on.inspect }) }
+
+    it('accepts null') { expect(call(due_on: nil)[:result]).to include(isError: false, content: [ { type: 'text', text: 'nil' } ]) }
+  end
+
+  context 'when a base overrides invoke' do
+    let(:tool_class) do
+      base = Class.new(described_class) do
+        rescue_from(ArgumentError) { |error| raise ActionModelContext::Error, error.message }
+
+        private def invoke(arguments)
+          raise ArgumentError, 'secret is refused' if arguments.key?(:secret)
+
+          super.upcase
+        end
+      end
+      stub_const('ShoutTool', Class.new(base) { argument :message, :string; def call(message:) = message })
+    end
+
+    it('transforms the value of call') { expect(call(message: 'hi')[:result][:content]).to eq([ { type: 'text', text: 'HI' } ]) }
+
+    it 'sees the arguments outside the schema, under rescue_from' do
+      expect(call(message: 'hi', secret: 1)[:result]).to include(isError: true, content: [ { type: 'text', text: 'secret is refused' } ])
+    end
+  end
+
   context 'with a Hash result' do
     let(:tool_class) { WhoAmITool }
 
