@@ -34,7 +34,7 @@ RSpec.describe ActionModelContext::Generators::ToolGenerator do
     it "produces valid Ruby" do
       files = Dir.glob(File.join(destination, "**/*.rb"))
       expect(files).not_to be_empty
-      files.each { expect(`#{RbConfig.ruby} -c #{_1}`).to include("Syntax OK") }
+      files.each { |file| expect(`#{RbConfig.ruby} -c #{file}`).to include("Syntax OK") }
     end
   end
 

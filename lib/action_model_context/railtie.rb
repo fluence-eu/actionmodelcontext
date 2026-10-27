@@ -5,7 +5,7 @@ module ActionModelContext
     end
 
     initializer "action_model_context.exception_reporter" do
-      MCP.configure { _1.exception_reporter = ErrorReporter }
+      MCP.configure { |config| config.exception_reporter = ErrorReporter }
     end
   end
 end

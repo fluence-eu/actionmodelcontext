@@ -22,7 +22,7 @@ module ActionModelContext
 
       def uri = options[:uri] || "app://#{file_name}"
 
-      def signature = uri.scan(ActionModelContext::Resource::URI_VARIABLE).flatten.map { "#{_1}:" }.join(", ")
+      def signature = uri.scan(ActionModelContext::Resource::URI_VARIABLE).flatten.map { |variable| "#{variable}:" }.join(", ")
     end
   end
 end

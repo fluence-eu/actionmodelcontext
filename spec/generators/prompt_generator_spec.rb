@@ -41,7 +41,7 @@ RSpec.describe ActionModelContext::Generators::PromptGenerator do
     run("Summarize", "topic:required", framework: "test_unit")
     files = Dir.glob(File.join(destination, "**/*.rb"))
     expect(files.size).to eq(3)
-    files.each { expect(`#{RbConfig.ruby} -c #{_1}`).to include("Syntax OK") }
+    files.each { |file| expect(`#{RbConfig.ruby} -c #{file}`).to include("Syntax OK") }
   end
 
   it("rejects a type") { expect { run("Summarize", "topic:string") }.to raise_error(Thor::Error) }

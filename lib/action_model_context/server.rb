@@ -36,10 +36,10 @@ module ActionModelContext
       templates, resources = Server.discover("ApplicationResource", "resources").partition(&:template?)
       server = MCP::Server.new(
         **mcp_server_options,
-        tools: Server.discover("ApplicationTool", "tools").map { _1.to_mcp(context:) },
-        resources: resources.map { _1.to_mcp(context:) },
-        resource_templates: templates.map { _1.to_mcp(context:) },
-        prompts: Server.discover("ApplicationPrompt", "prompts").map { _1.to_mcp(context:) },
+        tools: Server.discover("ApplicationTool", "tools").map { |tool| tool.to_mcp(context:) },
+        resources: resources.map { |resource| resource.to_mcp(context:) },
+        resource_templates: templates.map { |template| template.to_mcp(context:) },
+        prompts: Server.discover("ApplicationPrompt", "prompts").map { |prompt| prompt.to_mcp(context:) },
         capabilities: { tools: {}, resources: {}, prompts: {} },
       )
       # Host checking is left to Rails' config.hosts: the transport's own check rejects every Host but 127.0.0.1,

@@ -20,7 +20,7 @@ module ActionModelContext
 
       def remove_possible_suffix(name) = name.sub(/_?tool$/i, "")
 
-      def arguments = @arguments ||= specs.map { Argument.parse(_1) }
+      def arguments = @arguments ||= specs.map { |spec| Argument.parse(spec) }
 
       def signature = arguments.map(&:keyword).join(", ")
     end

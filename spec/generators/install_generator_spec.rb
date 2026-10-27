@@ -24,6 +24,6 @@ RSpec.describe ActionModelContext::Generators::InstallGenerator do
   it("adds the route") { expect(read("config/routes.rb")).to include("resource :mcp, controller: :mcp, only: %i[show create destroy]") }
 
   it "produces valid Ruby" do
-    generated_files.each { expect(`#{RbConfig.ruby} -c #{_1}`).to include("Syntax OK") }
+    generated_files.each { |file| expect(`#{RbConfig.ruby} -c #{file}`).to include("Syntax OK") }
   end
 end

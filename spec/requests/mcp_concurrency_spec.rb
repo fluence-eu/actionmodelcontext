@@ -8,7 +8,7 @@ RSpec.describe "MCP endpoint under concurrent requests" do
   end
 
   def call_who_am_i(user) = rpc("tools/call", { name: "who_am_i", arguments: {} }, "HTTP_X_USER" => user)[:structuredContent][:user]
-  def refund_description(locale) = rpc("tools/list", {}, "HTTP_ACCEPT_LANGUAGE" => locale)[:tools].find { _1[:name] == "billing_refund" }[:description]
+  def refund_description(locale) = rpc("tools/list", {}, "HTTP_ACCEPT_LANGUAGE" => locale)[:tools].find { |tool| tool[:name] == "billing_refund" }[:description]
 
   it "never leaks context or locale between concurrent requests" do
     # Rails 8.0's lazy route set and generate_local_secret race on a cold first request: CI seed 6009 got 404s and an ArgumentError.
@@ -23,7 +23,7 @@ RSpec.describe "MCP endpoint under concurrent requests" do
       end
     end
     # `value` re-raises the first failed thread at once; without this join its 3 still-running siblings hung the suite at exit.
-    threads.each { _1.join rescue nil }
+    threads.each { |thread| thread.join rescue nil }
     expect(threads.flat_map(&:value)).to all(satisfy { |user, locale, seen_user, description| seen_user == user && description == descriptions.fetch(locale) })
   end
 end

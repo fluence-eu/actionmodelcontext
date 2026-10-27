@@ -18,7 +18,7 @@ RSpec.describe "MCP endpoint", type: :request do
 
   def tool_names = rpc("tools/list")[:result][:tools].pluck(:name)
   def call_tool(name, headers: {}, **arguments) = rpc("tools/call", { name:, arguments: }, headers)[:result]
-  def description_of(name, headers) = rpc("tools/list", {}, headers)[:result][:tools].find { _1[:name] == name }[:description]
+  def description_of(name, headers) = rpc("tools/list", {}, headers)[:result][:tools].find { |tool| tool[:name] == name }[:description]
 
   shared_examples "an MCP endpoint" do
     it("lists only concrete tools") { expect(tool_names).to contain_exactly("echo", "who_am_i", "failing", "billing_refund") }

@@ -12,7 +12,7 @@ module Rspec
 
       private
 
-      def placeholders = specs.map { ActionModelContext::Generators::Argument.parse(_1) }.select(&:required).map(&:placeholder).join(", ")
+      def placeholders = specs.map { |spec| ActionModelContext::Generators::Argument.parse(spec) }.select(&:required).map(&:placeholder).join(", ")
     end
   end
 end
