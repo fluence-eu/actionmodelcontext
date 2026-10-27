@@ -137,25 +137,23 @@ Rails.application.config.x.mcp_token_verifier = MCP::Server::OAuth::JWTVerifier.
 Rails.application.config.middleware.use MCP::Server::OAuth::ProtectedResourceMetadataMiddleware, metadata
 ```
 
-Then pass the verifier, the same document and the required scopes to the transport:
+Then put the SDK's bearer middleware in front of the controller, with the verifier, the same document and the required scopes. `use` scopes it to this controller. A request without a valid token gets a 401 whose `WWW-Authenticate` header points to the document, and a token missing a required scope gets a 403 `insufficient_scope`. `mcp_context` only runs for accepted requests, and finds the verified `MCP::Server::OAuth::AccessToken` in the env:
 
 ```ruby
 class McpController < ApplicationController
   include ActionModelContext::Server
+  use MCP::Server::OAuth::Middleware,
+    token_verifier: Rails.configuration.x.mcp_token_verifier,
+    resource_metadata: Rails.configuration.x.mcp_resource_metadata,
+    required_scopes: %w[mcp:tools]
 
   private
 
-  def mcp_transport_options = {
-    token_verifier: Rails.configuration.x.mcp_token_verifier,
-    resource_metadata: Rails.configuration.x.mcp_resource_metadata,
-    required_scopes: %w[mcp:tools],
-  }
+  def mcp_context = { user: User.find_by(id: request.env[MCP::Server::OAuth::ENV_KEY].subject) }
 end
 ```
 
-A request without a valid token gets a 401 whose `WWW-Authenticate` header points to the document, and a token missing a required scope gets a 403 `insufficient_scope`.
-
-The transport verifies the bearer token on every request, but tools do not receive the SDK's `ServerContext`, so the verified token is not visible to them. An app that needs the token or its claims in `context` has to verify it itself, in a `before_action` or a middleware, and return it from `mcp_context`.
+The transport reads the same token from the env and does not verify it again. Passing `token_verifier:` through `mcp_transport_options` instead also protects the endpoint, but the transport then verifies the token after `mcp_context` has run, so the context cannot use it.
 
 ### Host and Origin checks (DNS rebinding)
 
