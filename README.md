@@ -119,7 +119,25 @@ The gem imposes no authentication. Three hooks are available, all private and ov
 
 ### OAuth
 
-Pass a verifier to the SDK transport through `mcp_transport_options`. It is anything that responds to `verify(token)` and returns an `MCP::Server::OAuth::AccessToken`, or `nil` to reject (see `MCP::Server::OAuth::TokenVerifier` in the SDK):
+The MCP server is an OAuth 2.1 resource server: it checks bearer tokens issued by an authorization server (Doorkeeper in the same app, or an external identity provider) and never issues them. The SDK implements this role.
+
+Clients discover the authorization server through an RFC 9728 Protected Resource Metadata document. It is served at the origin root (`/.well-known/oauth-protected-resource/mcp` for a server at `/mcp`) and without authentication, which is what the SDK's middleware does. `resource` must be the exact URL clients connect to: the SDK's verifiers check the token audience against it. Build the verifier once, at boot: `JWTVerifier` (which needs the `jwt` gem) caches the signing keys per instance. `IntrospectionVerifier` asks the authorization server instead, and any object that responds to `verify(token)` and returns an `MCP::Server::OAuth::AccessToken` works too (see `MCP::Server::OAuth::TokenVerifier`).
+
+```ruby
+# config/initializers/mcp_oauth.rb
+metadata = MCP::Server::OAuth::ProtectedResourceMetadata.new(
+  resource: 'https://app.example.com/mcp',
+  authorization_servers: [ 'https://auth.example.com' ],
+  scopes_supported: %w[mcp:tools],
+)
+Rails.application.config.x.mcp_resource_metadata = metadata
+Rails.application.config.x.mcp_token_verifier = MCP::Server::OAuth::JWTVerifier.new(
+  resource_metadata: metadata, jwks_uri: 'https://auth.example.com/.well-known/jwks.json',
+)
+Rails.application.config.middleware.use MCP::Server::OAuth::ProtectedResourceMetadataMiddleware, metadata
+```
+
+Then pass the verifier, the same document and the required scopes to the transport:
 
 ```ruby
 class McpController < ApplicationController
@@ -127,9 +145,15 @@ class McpController < ApplicationController
 
   private
 
-  def mcp_transport_options = { token_verifier: MyTokenVerifier.new }
+  def mcp_transport_options = {
+    token_verifier: Rails.configuration.x.mcp_token_verifier,
+    resource_metadata: Rails.configuration.x.mcp_resource_metadata,
+    required_scopes: %w[mcp:tools],
+  }
 end
 ```
+
+A request without a valid token gets a 401 whose `WWW-Authenticate` header points to the document, and a token missing a required scope gets a 403 `insufficient_scope`.
 
 The transport verifies the bearer token on every request, but tools do not receive the SDK's `ServerContext`, so the verified token is not visible to them. An app that needs the token or its claims in `context` has to verify it itself, in a `before_action` or a middleware, and return it from `mcp_context`.
 
