@@ -9,5 +9,6 @@ require 'action_model_context/tool'
 require 'action_model_context/resource'
 require 'action_model_context/prompt'
 require 'action_model_context/error_reporter'
+require 'action_model_context/protected_resource_metadata_middleware'
 require 'action_model_context/server'
 require 'action_model_context/railtie' if defined?(Rails::Railtie)
