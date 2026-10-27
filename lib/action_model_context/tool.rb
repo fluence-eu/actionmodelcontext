@@ -11,6 +11,7 @@ module ActionModelContext
     primitive kind: :tools, suffix: 'Tool'
 
     ARGUMENT_TYPES = %i[string integer number boolean array object].freeze
+    ARGUMENT_OPTIONS = %i[required null].freeze
     # JSON Schema 2020-12, the dialect MCP mandates (SEP-1613), minus type and required that argument sets itself.
     SCHEMA_KEYWORDS = %w[
       $id $schema $ref $anchor $dynamicRef $dynamicAnchor $vocabulary $comment $defs
@@ -27,13 +28,13 @@ module ActionModelContext
     class << self
       def tool_name(name = nil) = primitive_name(name)
 
-      def argument(name, type, required: false, null: false, **keywords)
+      def argument(name, type, **keywords)
         raise ArgumentError, "unknown argument type #{type.inspect}" unless ARGUMENT_TYPES.include?(type)
 
-        unknown = keywords.keys.reject { |key| SCHEMA_KEYWORDS.include?(key.to_s.camelize(:lower)) }
+        unknown = keywords.keys.reject { |key| ARGUMENT_OPTIONS.include?(key) || SCHEMA_KEYWORDS.include?(key.to_s.camelize(:lower)) }
         raise ArgumentError, "unknown JSON Schema keyword #{unknown.first.inspect} for argument #{name.inspect}" if unknown.any?
 
-        self.arguments = arguments.merge(name.to_sym => keywords.merge(type:, required:, null:)).freeze
+        self.arguments = arguments.merge(name.to_sym => keywords.merge(type:)).freeze
       end
 
       def argument_names = arguments.keys
@@ -63,7 +64,7 @@ module ActionModelContext
 
       def property_schema(name, spec)
         type = spec[:null] ? [ spec[:type].to_s, 'null' ] : spec[:type].to_s
-        keywords = spec.except(:required, :null).transform_keys { |key| key.to_s.camelize(:lower).to_sym }
+        keywords = spec.except(*ARGUMENT_OPTIONS).transform_keys { |key| key.to_s.camelize(:lower).to_sym }
         description = keywords[:description] || Translation.lookup(i18n_kind, tool_name, :arguments, name)
         { **keywords, type:, description: }.compact
       end
