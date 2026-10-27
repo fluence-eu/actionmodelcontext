@@ -27,15 +27,13 @@ module ActionModelContext
     class << self
       def tool_name(name = nil) = primitive_name(name)
 
-      def argument(name, type, required: false, description: nil, enum: nil, items: nil, properties: nil, null: false, **keywords)
+      def argument(name, type, required: false, null: false, **keywords)
         raise ArgumentError, "unknown argument type #{type.inspect}" unless ARGUMENT_TYPES.include?(type)
 
         unknown = keywords.keys.reject { |key| SCHEMA_KEYWORDS.include?(key.to_s.camelize(:lower)) }
         raise ArgumentError, "unknown JSON Schema keyword #{unknown.first.inspect} for argument #{name.inspect}" if unknown.any?
 
-        self.arguments = arguments.merge(
-          name.to_sym => { type:, required:, description:, enum:, items:, properties:, null:, keywords: },
-        ).freeze
+        self.arguments = arguments.merge(name.to_sym => { type:, required:, null:, keywords: }).freeze
       end
 
       def argument_names = arguments.keys
@@ -64,10 +62,10 @@ module ActionModelContext
       end
 
       def property_schema(name, spec)
-        description = spec[:description] || Translation.lookup(i18n_kind, tool_name, :arguments, name)
         type = spec[:null] ? [ spec[:type].to_s, 'null' ] : spec[:type].to_s
         keywords = spec[:keywords].transform_keys { |key| key.to_s.camelize(:lower).to_sym }
-        { type:, description:, enum: spec[:enum], items: spec[:items], properties: spec[:properties], **keywords }.compact
+        description = keywords[:description] || Translation.lookup(i18n_kind, tool_name, :arguments, name)
+        { type:, **keywords, description: }.compact
       end
     end
 
