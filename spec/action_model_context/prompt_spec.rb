@@ -85,6 +85,25 @@ RSpec.describe ActionModelContext::Prompt do
     expect(list[:prompts].first[:arguments]).to eq([ { name: 'topic', description: 'What to cover', required: true } ])
   end
 
+  it 'takes argument titles and descriptions from I18n written as a hash' do
+    I18n.backend.store_translations(:en, action_model_context: { prompts: { summarize: { arguments: { topic: { title: 'Topic', description: 'What to cover' } } } } })
+    expect(list[:prompts].first[:arguments]).to eq([ { name: 'topic', title: 'Topic', description: 'What to cover', required: true } ])
+  end
+
+  context 'with a declared argument title' do
+    let(:prompts) do
+      [ prompt_class('ReplyPrompt') do
+        argument :tone, title: 'Tone'
+        def call(tone: nil) = tone.to_s
+      end ]
+    end
+
+    it 'prefers it over I18n' do
+      I18n.backend.store_translations(:en, action_model_context: { prompts: { reply: { arguments: { tone: { title: 'Ignored', description: 'Writing tone' } } } } })
+      expect(list[:prompts].first[:arguments]).to eq([ { name: 'tone', title: 'Tone', description: 'Writing tone', required: false } ])
+    end
+  end
+
   it 'takes title and description from I18n' do
     I18n.backend.store_translations(:en, action_model_context: { prompts: { summarize: { title: 'Summarize', description: 'Sums up' } } })
     expect(list[:prompts]).to include(hash_including(name: 'summarize', title: 'Summarize', description: 'Sums up'))

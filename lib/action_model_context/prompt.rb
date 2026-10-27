@@ -11,8 +11,8 @@ module ActionModelContext
     class << self
       def prompt_name(name = nil) = primitive_name(name)
 
-      def argument(name, required: false, description: nil)
-        self.arguments = arguments.merge(name.to_sym => { required:, description: }).freeze
+      def argument(name, required: false, title: nil, description: nil)
+        self.arguments = arguments.merge(name.to_sym => { required:, title:, description: }).freeze
       end
 
       def argument_names = arguments.keys
@@ -30,8 +30,9 @@ module ActionModelContext
 
       def mcp_arguments
         arguments.map do |name, spec|
-          description = spec[:description] || Translation.lookup(i18n_kind, prompt_name, :arguments, name)
-          MCP::Prompt::Argument.new(name: name.to_s, description:, required: spec[:required])
+          title = spec[:title] || Translation.argument(i18n_kind, prompt_name, name, :title)
+          description = spec[:description] || Translation.argument(i18n_kind, prompt_name, name, :description)
+          MCP::Prompt::Argument.new(name: name.to_s, title:, description:, required: spec[:required])
         end
       end
     end

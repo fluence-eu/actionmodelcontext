@@ -65,7 +65,7 @@ module ActionModelContext
       def property_schema(name, spec)
         type = spec[:null] ? [ spec[:type].to_s, 'null' ] : spec[:type].to_s
         keywords = spec.except(*ARGUMENT_OPTIONS).transform_keys { |key| key.to_s.camelize(:lower).to_sym }
-        description = keywords[:description] || Translation.lookup(i18n_kind, tool_name, :arguments, name)
+        description = keywords[:description] || Translation.argument(i18n_kind, tool_name, name, :description)
         { **keywords, type:, description: }.compact
       end
     end
