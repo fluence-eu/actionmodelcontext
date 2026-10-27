@@ -1,6 +1,6 @@
 module ActionModelContext
-  # The SDK answers only when PATH_INFO is the RFC 9728 path built from the public resource URL, prefix included,
-  # which an app mounted under that prefix never receives: /.well-known/oauth-protected-resource/backend/app/mcp.
+  # The SDK answers only when PATH_INFO is the RFC 9728 path built from the public resource URL, prefix included
+  # (/.well-known/oauth-protected-resource/<prefix>/mcp), which an app mounted under that prefix never receives.
   class ProtectedResourceMetadataMiddleware < MCP::Server::OAuth::ProtectedResourceMetadataMiddleware
     PATH = '/.well-known/oauth-protected-resource'
 

@@ -143,7 +143,7 @@ config.action_model_context.oauth.scopes = %w[mcp:tools]
 
 `resource` is the public URL of the MCP endpoint, prefix included. With it, the gem publishes the RFC 9728 Protected Resource Metadata document, through which clients discover the authorization server, using the SDK's middleware: at the RFC 9728 path when requests for it reach the app, and at `/.well-known/oauth-protected-resource` relative to the app, the path an app mounted under a prefix receives. Without `resource`, the gem publishes nothing. `scopes` are advertised in the document and in the challenges.
 
-Every 401 points at that document through a URL built from the host and prefix of the request. Behind a proxy, the app must receive the public host and scheme (`X-Forwarded-Host`, `X-Forwarded-Proto`), which Rails reads; otherwise the challenge names the internal address.
+Every 401 points at that document. Its URL is `resource` with the path of the MCP endpoint replaced by `/.well-known/oauth-protected-resource` (`https://example.com/backend/app/.well-known/oauth-protected-resource` for `https://example.com/backend/app/mcp`), so it keeps a prefix that a proxy strips before the request reaches the app, without relying on forwarded headers.
 
 Then either the gem checks the token, or the app decides who calls.
 
