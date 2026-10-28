@@ -16,4 +16,6 @@ RSpec.describe 'boot' do
     expect(Nested::CollapseProbe.name).to eq('Nested::CollapseProbe')
     expect(defined?(Tools)).to be_nil
   end
+
+  it('keeps the namespace of the other app/mcp directories') { expect(Billing::TaxRate.name).to eq('Billing::TaxRate') }
 end
