@@ -1,0 +1,20 @@
+name: Publish Gem
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to publish (e.g. v2026.10.28.143000). Must already have a corresponding GitHub Release with the gem asset(s) attached.
+        required: true
+        type: string
+
+jobs:
+  publish:
+    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-publish.yml@v6
+    with:
+      tag: ${{ inputs.tag }}
+    permissions:
+      contents: read
+      packages: write

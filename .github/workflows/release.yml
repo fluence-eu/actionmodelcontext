@@ -1,0 +1,16 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - lib/**/version.rb
+
+jobs:
+  release:
+    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-release.yml@v6
+    secrets:
+      FLUENCE_RELEASE_BOT_PRIVATE_KEY: ${{ secrets.FLUENCE_RELEASE_BOT_PRIVATE_KEY }}
+    permissions:
+      contents: write
+      packages: read

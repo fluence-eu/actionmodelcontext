@@ -1,0 +1,5 @@
+release:
+  # The convention would derive lib/actionmodelcontext/version.rb from the gem name.
+  gem_specs: actionmodelcontext:lib/action_model_context/version.rb
+  version: date
+  changelog: manual

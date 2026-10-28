@@ -203,6 +203,22 @@ A one-line summary in the PR body is sufficient.
 
 ---
 
+## Versioning & Releases
+
+Versions are dated, not semantic: a release is versioned by its UTC timestamp, such as `2026.10.28.143000`, and tagged `v2026.10.28.143000`.
+
+1. **Write the changelog.** Before a release, the `## [Unreleased]` section of `CHANGELOG.md` is written by hand, from the merged PRs, and merged through a normal PR (`docs: write the changelog of the next release`).
+2. **Dispatch `prepare-release.yml`.** It takes no input: it writes the timestamp into `lib/action_model_context/version.rb`, turns `## [Unreleased]` into `## [<version>] - <date>`, and opens an auto-merged release PR. It fails if `## [Unreleased]` is missing or empty.
+3. **Merging the release PR** triggers `release.yml` (it fires on any push touching `version.rb`), which creates the tag and the GitHub Release with that changelog section as notes, then `publish.yml` pushes the gem to GitHub Packages.
+
+What this means for a normal PR:
+
+- ❌ Do **not** edit `version.rb`.
+- ❌ Do **not** edit `CHANGELOG.md` in a feature PR — the changelog is written for the release, not per PR.
+- ❌ Do **not** add a "release: vX" or "bump version" commit.
+
+---
+
 ## Architecture
 
 ```
@@ -245,6 +261,7 @@ lib/
 GitHub Actions:
 
 - **ci.yml** — on every PR and on `main`: RSpec on Ruby 3.2 to 4.0 × Rails 7.2, 8.0 and 8.1, and RuboCop
+- **prepare-release.yml**, **release.yml**, **publish.yml** — the release pipeline, see [Versioning & Releases](#versioning--releases)
 
 ---
 
