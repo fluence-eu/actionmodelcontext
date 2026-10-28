@@ -36,6 +36,18 @@ end
 
 `argument(name, type, required: false, null: false, **keywords)` where `type` is one of `:string`, `:integer`, `:number`, `:boolean`, `:array`, `:object`. `null: true` also accepts `null` (`"type": ["string", "null"]`). The other keywords are those of JSON Schema 2020-12, the dialect MCP uses (`description:`, `enum:`, `items:`, `minimum:`…), their names camelized: `argument :ids, :array, items: { type: 'integer' }, max_items: 50` emits `maxItems`. A hash such as `items:` goes through as is, so write its keys in JSON (`maxLength`). A keyword outside it, a typo such as `max_itmes:` for instance, raises `ArgumentError` when the class loads. The SDK validates the arguments against the schema before `call`, so `minimum`, `maxItems` and the like are enforced; `format` is not. The tool name defaults to the underscored class name without the `Tool` suffix (`echo`); override it with `tool_name 'other'`. `title`, `description` and `annotations(**hints)` are class-level macros.
 
+`arguments_from(properties, required: [])` declares one argument per entry of a JSON Schema `properties` hash, the names listed in `required` being required, so one set of fields can serve a create tool and an update tool:
+
+```ruby
+TASK_FIELDS = { title: { type: 'string' }, due_on: { type: %w[string null], format: 'date' } }.freeze
+
+class CreateTaskTool < ApplicationTool
+  arguments_from TASK_FIELDS, required: %i[title]
+end
+```
+
+Keys may be symbols or strings, as in a schema loaded from JSON, and `type: [..., 'null']` becomes `null: true`. A property without a single type, or with its own `required` list, raises `ArgumentError`; a `required` nested in `items` or `properties` goes through as is.
+
 `call` may return a `String`, a `Hash` (sent as text and as structured content), an `Array`, or an `MCP::Tool::Response`. Raise `ActionModelContext::Error` to return an error result to the model with your message; any other exception is reported through `Rails.error` (`severity: :error`, `source: 'actionmodelcontext'`), with the JSON-RPC method and the primitive's name or URI as `mcp_method` and `mcp_name` in the context, never the arguments. `rescue_from` works inside a primitive:
 
 ```ruby

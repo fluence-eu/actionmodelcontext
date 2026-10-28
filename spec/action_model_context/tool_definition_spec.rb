@@ -61,6 +61,41 @@ RSpec.describe ActionModelContext::Tool do
 
   it('rejects a keyword outside JSON Schema 2020-12') { expect { Class.new(described_class).argument(:ids, :array, max_itmes: 50) }.to raise_error(ArgumentError, /max_itmes/) }
 
+  describe '.arguments_from' do
+    let(:properties) do
+      {
+        title: { type: 'string', description: 'Title' },
+        due_on: { type: %w[string null], format: 'date' },
+        tasks: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' } }, required: [ 'title' ] } }
+      }
+    end
+
+    def schema_from(properties, required: []) = schema_of(stub_const('CreateTaskTool', Class.new(described_class) { arguments_from(properties, required:) }))[:inputSchema]
+
+    it 'declares the properties, the named ones required, a nested required kept' do
+      schema = schema_from(properties, required: %i[title])
+      expect(schema[:required]).to eq([ 'title' ])
+      expect(schema[:properties]).to eq(
+        title: { type: 'string', description: 'Title' },
+        due_on: { type: %w[string null], format: 'date' },
+        tasks: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' } }, required: [ 'title' ] } },
+      )
+    end
+
+    it 'reads a schema with string keys like one loaded from JSON' do
+      expect(schema_from(JSON.parse(properties.to_json), required: %w[title])).to eq(schema_from(properties, required: %i[title]))
+    end
+
+    it 'refuses a property with its own required list, which argument cannot express' do
+      object = { task: { type: 'object', properties: { title: { type: 'string' } }, required: [ 'title' ] } }
+      expect { Class.new(described_class).arguments_from(object) }.to raise_error(ArgumentError, /:task lists its own required/)
+    end
+
+    it 'refuses a property without a single type' do
+      expect { Class.new(described_class).arguments_from({ id: { type: %w[string integer] } }) }.to raise_error(ArgumentError, /:id needs a single type/)
+    end
+  end
+
   it 'accepts null with null: true' do
     tool = stub_const('FindUserTool', Class.new(described_class) { argument :due_on, :string, null: true })
     expect(schema_of(tool)[:inputSchema][:properties][:due_on]).to eq(type: %w[string null])
