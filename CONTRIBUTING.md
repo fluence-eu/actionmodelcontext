@@ -15,10 +15,11 @@ Thanks for contributing! Here's how to get started:
 ```bash
 git clone git@github.com:fluence-eu/actionmodelcontext.git
 cd actionmodelcontext
+bundle config set --global rubygems.pkg.github.com <github-user>:<token>
 bundle install
 ```
 
-Requires Ruby 3.2+. The gem supports Rails 7.2+ and `mcp` ~> 1.8.
+Requires Ruby 3.2+. The gem supports Rails 7.2+ and `mcp` ~> 1.8. The bundle includes [`fluence-ci-tools`](https://github.com/fluence-eu/fluence-ci-tools), hosted on GitHub Packages: the token needs the `read:packages` scope.
 
 ## Development
 
@@ -29,6 +30,8 @@ bundle exec rspec         # specs, against Rails 8.1 by default
 bundle exec rubocop       # rubocop-rails-omakase, with single-quoted strings
 bundle exec rubocop -a    # auto-fix linting
 ```
+
+SimpleCov fails the run below 95 % of lines overall or 70 % in a file, so running a single spec file exits with status 2 even when its examples pass.
 
 The specs run against a dummy Rails app in `spec/dummy`. CI runs them on every Rails version the gem supports, selected by `RAILS_VERSION`. `Gemfile.lock` is not committed, so re-resolve the bundle with the same variable to run them locally against another version, and run `bundle update` without it to come back to the default:
 
@@ -260,7 +263,10 @@ lib/
 
 GitHub Actions:
 
-- **ci.yml** — on every PR and on `main`: RSpec on Ruby 3.2 to 4.0 × Rails 7.2, 8.0 and 8.1, and RuboCop
+- **ci.yml** — on every PR and on `main`: RSpec on Ruby 3.2 to 4.0 × Rails 7.2, 8.0 and 8.1
+- **rubocop-measure.yml**, **rubocop-pr.yml** — RuboCop offense baseline + sticky offense-delta comment on PRs, failing on any offense
+- **coverage-measure.yml**, **coverage-pr.yml** — coverage baseline + undercover regression check
+- **codequality-measure.yml**, **codequality-pr.yml** — reek/flog/flay advisory deltas
 - **prepare-release.yml**, **release.yml**, **publish.yml** — the release pipeline, see [Versioning & Releases](#versioning--releases)
 
 ---
