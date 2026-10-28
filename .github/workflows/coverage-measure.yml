@@ -1,0 +1,12 @@
+name: Coverage Measure (baseline)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  measure:
+    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-coverage-measure.yml@v6
+    permissions:
+      contents: read
+      packages: read

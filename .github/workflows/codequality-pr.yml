@@ -1,0 +1,16 @@
+name: Code Quality PR Check
+
+on:
+  pull_request:
+
+jobs:
+  codequality:
+    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-codequality-pr.yml@v6
+    secrets:
+      FLUENCE_CI_BOT_PRIVATE_KEY: ${{ secrets.FLUENCE_CI_BOT_PRIVATE_KEY }}
+      FLUENCE_RELEASE_BOT_PRIVATE_KEY: ${{ secrets.FLUENCE_RELEASE_BOT_PRIVATE_KEY }}
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+      packages: read
