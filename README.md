@@ -6,8 +6,18 @@ Requires Ruby 3.2+, Rails 7.2+ and `mcp` ~> 1.8.
 
 ## Installation
 
+The gem is hosted on GitHub Packages. Add it to the application's Gemfile:
+
+```ruby
+source 'https://rubygems.pkg.github.com/fluence-eu' do
+  gem 'actionmodelcontext'
+end
+```
+
+Then install it and run the generator:
+
 ```sh
-bundle add actionmodelcontext
+bundle install
 bin/rails generate action_model_context:install
 ```
 
