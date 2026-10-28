@@ -12,6 +12,4 @@ gem 'rake'
 gem 'rspec-rails'
 gem 'rubocop-rails-omakase', require: false
 
-source 'https://rubygems.pkg.github.com/fluence-eu' do
-  gem 'fluence-ci-tools', require: false
-end
+gem 'guardian-ci', require: false

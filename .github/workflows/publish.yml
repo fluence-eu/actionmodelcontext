@@ -12,7 +12,7 @@ on:
 
 jobs:
   publish:
-    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-publish.yml@v6
+    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-publish.yml@v7
     with:
       tag: ${{ inputs.tag }}
     permissions:

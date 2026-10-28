@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -18,7 +17,6 @@ jobs:
         rails: ["~> 7.2.0", "~> 8.0.0", "~> 8.1.0"]
     env:
       RAILS_VERSION: ${{ matrix.rails }}
-      BUNDLE_RUBYGEMS__PKG__GITHUB__COM: x-access-token:${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1

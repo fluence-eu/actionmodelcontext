@@ -15,11 +15,10 @@ Thanks for contributing! Here's how to get started:
 ```bash
 git clone git@github.com:fluence-eu/actionmodelcontext.git
 cd actionmodelcontext
-bundle config set --global rubygems.pkg.github.com <github-user>:<token>
 bundle install
 ```
 
-Requires Ruby 3.2+. The gem supports Rails 7.2+ and `mcp` ~> 1.8. The bundle includes [`fluence-ci-tools`](https://github.com/fluence-eu/fluence-ci-tools), hosted on GitHub Packages: the token needs the `read:packages` scope.
+Requires Ruby 3.2+. The gem supports Rails 7.2+ and `mcp` ~> 1.8.
 
 ## Development
 

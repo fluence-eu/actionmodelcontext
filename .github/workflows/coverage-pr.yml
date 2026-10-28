@@ -5,7 +5,7 @@ on:
 
 jobs:
   coverage:
-    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-coverage-pr.yml@v6
+    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-coverage-pr.yml@v7
     secrets:
       FLUENCE_CI_BOT_PRIVATE_KEY: ${{ secrets.FLUENCE_CI_BOT_PRIVATE_KEY }}
       FLUENCE_RELEASE_BOT_PRIVATE_KEY: ${{ secrets.FLUENCE_RELEASE_BOT_PRIVATE_KEY }}
