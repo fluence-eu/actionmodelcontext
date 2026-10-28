@@ -4,7 +4,7 @@ module ActionModelContext
     config.action_model_context.oauth = ActiveSupport::OrderedOptions.new
 
     initializer 'action_model_context.autoload' do |app|
-      Rails.autoloaders.main.collapse(app.root.join('app/mcp/*').to_s)
+      Rails.autoloaders.main.collapse(*%w[tools resources prompts].map { |dir| app.root.join('app/mcp', dir).to_s })
     end
 
     initializer 'action_model_context.exception_reporter' do

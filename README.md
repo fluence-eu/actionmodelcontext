@@ -17,7 +17,7 @@ The install generator creates `ApplicationTool`, `ApplicationResource` and `Appl
 resource :mcp, controller: :mcp, only: %i[show create destroy]
 ```
 
-Files under `app/mcp/tools`, `app/mcp/resources` and `app/mcp/prompts` are autoloaded with that first directory level collapsed: `app/mcp/tools/billing/refund_tool.rb` defines `Billing::RefundTool`. The controller discovers primitives through `ApplicationTool`, `ApplicationResource` and `ApplicationPrompt` and their `descendants`.
+Files under `app/mcp/tools`, `app/mcp/resources` and `app/mcp/prompts` are autoloaded with that first directory level collapsed: `app/mcp/tools/billing/refund_tool.rb` defines `Billing::RefundTool`. Other directories under `app/mcp` keep theirs, so the code the primitives share can live next to them: `app/mcp/billing/tax_rate.rb` defines `Billing::TaxRate`. The controller discovers primitives through `ApplicationTool`, `ApplicationResource` and `ApplicationPrompt` and their `descendants`.
 
 Only concrete classes are exposed. A tool or prompt is concrete when it, or a parent below the gem's base class, defines `call`. A resource is concrete when it declares its own `uri` and defines `read` (`uri` is not inherited). An intermediate base such as `Admin::BaseTool < ApplicationTool` that only adds `rescue_from` handlers or arguments is therefore not listed, while its subclasses that define `call` are. A base that defines `call` itself is exposed as a tool.
 
