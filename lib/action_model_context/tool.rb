@@ -37,6 +37,20 @@ module ActionModelContext
         self.arguments = arguments.merge(name.to_sym => keywords.merge(type:)).freeze
       end
 
+      def arguments_from(properties, required: [])
+        required = required.map(&:to_s)
+        properties.each do |name, schema|
+          schema = schema.symbolize_keys
+          raise ArgumentError, "argument #{name.to_sym.inspect} lists its own required properties, which argument cannot express" if schema.key?(:required)
+
+          types = Array(schema[:type]).map(&:to_s)
+          null = types.delete('null').present?
+          raise ArgumentError, "argument #{name.to_sym.inspect} needs a single type, got #{schema[:type].inspect}" unless types.one?
+
+          argument(name, types.first.to_sym, required: required.include?(name.to_s), null:, **schema.except(:type))
+        end
+      end
+
       def argument_names = arguments.keys
 
       def concrete? = instance_method(:call).owner != Tool
