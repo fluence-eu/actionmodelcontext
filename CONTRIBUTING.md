@@ -18,7 +18,7 @@ cd actionmodelcontext
 bundle install
 ```
 
-Requires Ruby 3.2+. The gem supports Rails 7.2+ and `mcp` ~> 1.8.
+Requires Ruby 3.3+. The gem supports Rails 7.2+ and `mcp` ~> 1.8.
 
 ## Development
 

@@ -2,7 +2,7 @@
 
 A Rails-flavoured MCP server layer on top of the official [`mcp`](https://github.com/modelcontextprotocol/ruby-sdk) SDK. Tools, resources and prompts are plain Ruby classes under `app/mcp/`, discovered by Zeitwerk, and served by a controller concern over the Streamable HTTP transport (stateless, JSON responses).
 
-Requires Ruby 3.2+, Rails 7.2+ and `mcp` ~> 1.8.
+Requires Ruby 3.3+, Rails 7.2+ and `mcp` ~> 1.8.
 
 ## Installation
 
