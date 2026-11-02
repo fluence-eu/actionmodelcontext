@@ -11,6 +11,7 @@ Gem::Specification.new do |spec|
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.3'
 
+  spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = 'https://github.com/fluence-eu/actionmodelcontext'
   spec.metadata['changelog_uri'] = 'https://github.com/fluence-eu/actionmodelcontext/blob/main/CHANGELOG.md'
   spec.metadata['github_repo'] = 'https://github.com/fluence-eu/actionmodelcontext'
