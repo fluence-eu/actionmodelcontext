@@ -3,4 +3,3 @@ release:
   gem_specs: actionmodelcontext:lib/action_model_context/version.rb
   version: date
   changelog: manual
-  rubygems_owner: 255155
