@@ -1,0 +1,21 @@
+name: Publish Gem to RubyGems.org
+
+on:
+  release:
+    types: [published]
+  # Manual fallback for republishing a tag.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to publish (e.g. v0.10.0). Must already have a GitHub Release with the gem asset(s) attached.
+        required: true
+        type: string
+
+jobs:
+  publish:
+    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-publish-rubygems.yml@v7
+    with:
+      tag: ${{ inputs.tag }}
+    permissions:
+      contents: read
+      id-token: write
