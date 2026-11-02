@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [2026.11.02.161253] - 2026-11-02
 
 First release.
 

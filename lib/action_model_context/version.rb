@@ -1,3 +1,3 @@
 module ActionModelContext
-  VERSION = '0.1.0'
+  VERSION = '2026.11.02.161253'
 end
