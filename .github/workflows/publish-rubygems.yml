@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag to publish (e.g. v0.10.0). Must already have a GitHub Release with the gem asset(s) attached.
+        description: Tag to publish (e.g. v2026.10.28.143000). Must already have a GitHub Release with the gem asset(s) attached.
         required: true
         type: string
 
