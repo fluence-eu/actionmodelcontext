@@ -1,0 +1,11 @@
+--markup markdown
+--no-private
+--hide-api private
+--output-dir doc
+--readme README.md
+--template-path yard-templates
+lib/**/*.rb
+-
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE.txt

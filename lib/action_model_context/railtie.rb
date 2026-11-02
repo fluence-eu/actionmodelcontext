@@ -1,4 +1,7 @@
 module ActionModelContext
+  # Autoloads `app/mcp`, reports failures through {ErrorReporter} and sets up `config.action_model_context.oauth`.
+  #
+  # @api private
   class Railtie < Rails::Railtie
     config.action_model_context = ActiveSupport::OrderedOptions.new
     config.action_model_context.oauth = ActiveSupport::OrderedOptions.new

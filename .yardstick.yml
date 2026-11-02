@@ -1,0 +1,34 @@
+---
+# yardstick quality checks for the gem's public API.
+# @api tags document the stability contract: public methods are part
+# of SemVer, private ones may change without notice.
+threshold: 95
+require_exact_threshold: false
+verbose: true
+path:
+  - 'lib/**/*.rb'
+rules:
+  ApiTag::Presence:
+    enabled: true
+    exclude: []
+  ApiTag::Inclusion:
+    enabled: true
+    exclude: []
+  ApiTag::ProtectedMethod:
+    enabled: false
+  ApiTag::PrivateMethod:
+    enabled: false
+  ExampleTag:
+    enabled: false
+  ReturnTag:
+    enabled: true
+    exclude: []
+  Summary::Presence:
+    enabled: true
+    exclude: []
+  Summary::Length:
+    enabled: false
+  Summary::Delimiter:
+    enabled: false
+  Summary::SingleLine:
+    enabled: false
