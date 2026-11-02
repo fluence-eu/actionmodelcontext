@@ -1,0 +1,12 @@
+name: Docs Measure (baseline)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  measure:
+    uses: fluence-eu/ci-workflows/.github/workflows/ruby-gem-docs-measure.yml@v7
+    permissions:
+      contents: read
+      packages: read

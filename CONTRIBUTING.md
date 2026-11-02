@@ -32,6 +32,8 @@ bundle exec rubocop -a    # auto-fix linting
 
 SimpleCov fails the run below 95 % of lines overall or 70 % in a file, so running a single spec file exits with status 2 even when its examples pass.
 
+`bundle exec guardian-ci docs --report` measures the YARD documentation with yardstick, which fails below 95 %, and `bundle exec guardian-ci docs --build` generates the site in `doc/`.
+
 The specs run against a dummy Rails app in `spec/dummy`. CI runs them on every Rails version the gem supports, selected by `RAILS_VERSION`. `Gemfile.lock` is not committed, so re-resolve the bundle with the same variable to run them locally against another version, and run `bundle update` without it to come back to the default:
 
 ```bash
@@ -256,6 +258,7 @@ lib/
 - One-expression methods are endless: `def argument_names = arguments.keys`
 - Hash and keyword shorthand: `argument(name, type, null:)`, not `null: null`
 - Comments only for the non-obvious why, and generic: no deployment-specific names, hosts or paths
+- YARD: a summary and `@return` on every method, `@api public` for what the README documents and `@api private` for the rest, which stays off the site
 - RuboCop: no rule disabling without justification
 
 ## CI
@@ -266,6 +269,7 @@ GitHub Actions:
 - **rubocop-measure.yml**, **rubocop-pr.yml** — RuboCop offense baseline + sticky offense-delta comment on PRs, failing on any offense
 - **coverage-measure.yml**, **coverage-pr.yml** — coverage baseline + undercover regression check
 - **codequality-measure.yml**, **codequality-pr.yml** — reek/flog/flay advisory deltas
+- **docs-measure.yml**, **docs-pr.yml**, **docs-deploy.yml** — yardstick baseline + sticky comment on PRs, failing below 95 %, and the YARD site on GitHub Pages
 - **prepare-release.yml**, **release.yml**, **publish.yml** — the release pipeline, see [Versioning & Releases](#versioning--releases)
 
 ---
