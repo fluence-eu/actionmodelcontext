@@ -262,11 +262,13 @@ lib/
 
 GitHub Actions:
 
-- **ci.yml** — on every PR and on `main`: RSpec on Ruby 3.2 to 4.0 × Rails 7.2, 8.0 and 8.1
+- **ci.yml** — on every PR and on `main`: RSpec on Ruby 3.3 to 4.0 × Rails 7.2, 8.0 and 8.1
 - **rubocop-measure.yml**, **rubocop-pr.yml** — RuboCop offense baseline + sticky offense-delta comment on PRs, failing on any offense
 - **coverage-measure.yml**, **coverage-pr.yml** — coverage baseline + undercover regression check
 - **codequality-measure.yml**, **codequality-pr.yml** — reek/flog/flay advisory deltas
 - **prepare-release.yml**, **release.yml**, **publish.yml** — the release pipeline, see [Versioning & Releases](#versioning--releases)
+- **claude-review-pr.yml** — Claude's review on every PR except release PRs, advisory: it never fails the PR
+- **dependabot.yml** — weekly update PRs for the gems and the actions
 
 ---
 
