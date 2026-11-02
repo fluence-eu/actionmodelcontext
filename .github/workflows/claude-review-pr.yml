@@ -1,0 +1,21 @@
+name: Claude — PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    uses: fluence-eu/ci-workflows/.github/workflows/claude-review-pr.yml@v7
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      FLUENCE_RELEASE_BOT_PRIVATE_KEY: ${{ secrets.FLUENCE_RELEASE_BOT_PRIVATE_KEY }}
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
