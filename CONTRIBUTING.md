@@ -213,7 +213,7 @@ Versions are dated, not semantic: a release is versioned by its UTC timestamp, s
 
 1. **Write the changelog.** Before a release, the `## [Unreleased]` section of `CHANGELOG.md` is written by hand, from the merged PRs, and merged through a normal PR (`docs: write the changelog of the next release`).
 2. **Dispatch `prepare-release.yml`.** It takes no input: it writes the timestamp into `lib/action_model_context/version.rb`, turns `## [Unreleased]` into `## [<version>] - <date>`, and opens an auto-merged release PR. It fails if `## [Unreleased]` is missing or empty.
-3. **Merging the release PR** triggers `release.yml` (it fires on any push touching `version.rb`), which creates the tag and the GitHub Release with that changelog section as notes, then `publish.yml` pushes the gem to GitHub Packages.
+3. **Merging the release PR** triggers `release.yml` (it fires on any push touching `version.rb`), which creates the tag and the GitHub Release with that changelog section as notes, then `publish.yml` pushes the gem to GitHub Packages and `publish-rubygems.yml` to rubygems.org.
 
 What this means for a normal PR:
 
@@ -270,7 +270,7 @@ GitHub Actions:
 - **coverage-measure.yml**, **coverage-pr.yml** — coverage baseline + undercover regression check
 - **codequality-measure.yml**, **codequality-pr.yml** — reek/flog/flay advisory deltas
 - **docs-measure.yml**, **docs-pr.yml**, **docs-deploy.yml** — yardstick baseline + sticky comment on PRs, failing below 95 %, and the YARD site on GitHub Pages
-- **prepare-release.yml**, **release.yml**, **publish.yml** — the release pipeline, see [Versioning & Releases](#versioning--releases)
+- **prepare-release.yml**, **release.yml**, **publish.yml**, **publish-rubygems.yml** — the release pipeline, see [Versioning & Releases](#versioning--releases)
 - **claude-review-pr.yml** — Claude's review on every PR except release PRs, advisory: it never fails the PR
 - **dependabot.yml** — weekly update PRs for the gems and the actions
 
